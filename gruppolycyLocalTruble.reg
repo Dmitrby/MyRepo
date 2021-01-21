@@ -1,0 +1,8 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Svchost]
+"GPSvcGroup"=hex(7):47,00,50,00,53,00,76,00,63,00,00,00,00,00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Svchost\GPSvcGroup]
+"AuthenticationCapabilities"=dword:00003020
+"CoInitializeSecurityParam"=dword:00000001

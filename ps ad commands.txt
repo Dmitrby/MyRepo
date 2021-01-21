@@ -1,0 +1,284 @@
+Get-WindowsCapability -Name RSAT* -Online | Add-WindowsCapability -Online -Rsat install
+server #download and install Rsat module
+Import-Module ServerManager
+Add-WindowsFeature RSAT-AD-PowerShell,RSAT-AD-AdminCenter
+Get-Module -ListAvailable ActiveDirectory
+pc
+import-module activedirectory
+==============================================================
+ps ad kommands
+==============================================================
+powershell -NoProfile -ExecutionPolicy Bypass -File "C:\***\***.ps1"
+**********************************************************************
+Начало любого скрипта
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
+#[Console]::outputEncoding = [System.Text.Encoding]::GetEncoding('cp866')
+$ErrorActionPreference = 'SilentlyContinue'   - не выводить ошибки в консоль
+****************************************************************************
+Add-PSSnapin Microsoft.Exchange.Management.PowerShell.SnapIn
+****************************************************************************
+
+Вывод без заголовка
+Get-ADComputer -Filter { OperatingSystem -Like '*Windows Server*' } -Properties DNSHostName | Select DNSHostName -ExpandProperty DNSHostName |out-file -encoding default  "\\crm00111\soft\servers.txt"
+********************************************************************************************************************************************************************************************************
+
+---lastlogon---- = [datetime]::FromFileTime((Get-ADUser -prop * boev | foreach {$_.lastLogon}))
+
+Заблокированные пользователи
+Search-ADAccount -UsersOnly -LockedOut | FT Name, SamAccountName, AccountLockoutTime
+Search-ADAccount -UsersOnly -AccountDisabled |sort LastLogonDate | Select Name,SamAccountName,LastLogonDate,DistinguishedName |out-gridview -title "Disabled Users"
+Search-ADAccount -AccountInactive –ComputersOnly -TimeSpan 90 |out-gridview -title "pc last 90 days"
+Search-ADAccount -AccountInactive -ComputersOnly -DateTime ‘1/1/2017’|Select Name,LastLogonDate| ft
+
+#Очистка корзины АД
+Get-ADObject -Filter 'isDeleted -eq $true -and Name -like "*DEL:*"' -IncludeDeletedObjects | Remove-ADObject
+(Get-ADObject –SearchBase “CN=Deleted Objects,DC=action-crm,DC=local” –ldapFilter “(objectClass=*)" -includeDeletedObjects).count
+
+# Проверка включена ли корзина EnabledScopes - если пусто то нет.
+Get-ADOptionalFeature "Recycle Bin Feature"
+
+#выгрузка по пользователям из группы
+ Get-ADGroupMember -Recursive 'VPN_PRESS'| ForEach {Get-ADUser -filter {samaccountname -eq $_.SamAccountName} -Properties EmailAddress } |out-gridview -title "Users"
+ 
+ #перенос пользователей в группу под админом
+ $user = Get-ADGroupMember -Recursive 'jira_am_software_users'| ForEach {Get-ADUser -filter {samaccountname -eq $_.SamAccountName}}
+ $Group = "CN=conf_am_software_users,OU=_Groups,OU=IT_Developers,OU=Users_Media,DC=amedia,DC=loc"
+ Add-ADGroupMember -Identity $Group -Members $User
+ 
+ 
+Get-ADGroupMember -Recursive 'Jira_ad_bitbucket'| ForEach {Get-ADUser -filter {samaccountname -eq $_.SamAccountName} -Properties name, samaccountname,EmailAddress } |Select-Object -property name, samaccountname, EmailAddress |out-gridview -title "Users"
+#
+Get-ADComputer -Filter * -Properties *  | Sort LastLogonDate | FT Name, ipv4*, oper*, LastLogonDate -Autosize
+Get-ADComputer  -Properties * -Filter * -searchbase "OU=Computers_TVR,OU=Computers_CRM,DC=action-crm,DC=local" | Sort-Object -Property CN, Description | FT CN, Description -Autosize
+#
+выгрузка сидов
+Get-ADGroup -filter * | Select-Object SamAccountName, SID| ft -AutoSize 
+For only Enabled User Accounts 
+(get-aduser -filter *|where {$_.enabled -eq "True"}).count
+#
+For only Disabled User Accounts 
+(get-aduser -filter *|where {$_.enabled -ne "False"}).count
+#
+This will give you the number of user objects in AD
+(get-aduser -filter *).count 
+#
+только включенные с доступом по впн
+Get-ADUser -Filter {Enabled -eq "True" -and msNPAllowDialIn -eq "TRUE" } | Select-Object Name,samaccountname,msNPAllowDialin | Format-Table >> "\\nettop-8\soft\dc_all.txt"
+#
+с выборкой в определённой папке
+Get-ADUser -Filter {Enabled -eq "True" -and msNPAllowDialIn -eq "TRUE" } -SearchBase 'OU=Jira2,DC=action-crm,DC=local' |sort name| Select-Object Name,samaccountname,msNPAllowDialin | Format-Table -AutoSize | convertto-html | out-file "\\nettop-8\soft\d.hml"
+#
+выгрузка групповы
+Get-ADGroup -Properties * -Filter *  | select 'name', 'description' |ForEach-Object { $(foreach ($prop in 'Name', 'description') { $_.$prop }) -join '|'} | out-file -encoding default "\\crm00111\soft\groups.txt" 
+
+
+#выгрузка с разделителями
+Get-ADUser -Filter {Enabled -eq "True"} -properties * |ForEach-Object { $(foreach ($prop in 'SamAccountName', 'EmailAddress', 'Enabled', 'Created', 'Modified', 'LastLogonDate') { $_.$prop }) -join '|'} | out-file -Encoding UTF8 "\\spps.action-crm.local\UserShare\_Общая_\ad\crm.txt" 
+
+#кто не заходил 90 дней
+$MDate = ((Get-Date).AddDays(-300)).Date
+ $MDate 
+ Get-ADUser -Filter {LastLogonDate -lt $MDate} -property LastLogonDate -SearchBase 'OU=CRMUsers,DC=action-crm,DC=local' |sort name|ft name,samaccountname,LastLogonDate -AutoSize > "\\nettop-8\soft\pc.txt"
+ 
+#
+выгрузка в файл отключенныйх пользователй из директории
+ Get-ADUser -Filter {Enabled -eq "false" } -SearchBase 'OU=CRMUsers,DC=action-crm,DC=local' | Select-Object Name | Format-Table >> "\\nettop-8\soft\movelist.csv"
+#
+перенос отключенных учёток 
+Get-ADUser -Filter {Enabled -eq "false" } -SearchBase 'OU=CRMUsers,DC=action-crm,DC=local' | Move-ADObject -TargetPath “OU=Disabled_Users,DC=action-crm,DC=local” 
+#
+ 
+$date_with_offset= (Get-Date).AddDays(-40)
+Get-ADComputer  -Properties LastLogonDate -Filter {LastLogonDate -lt $date_with_offset } | Sort LastLogonDate | FT Name, LastLogonDate -Autosize > "\\nettop-8\soft\pc.txt"Get-ADComputer  -Properties LastLogonDate -Filter {LastLogonDate -lt $date_with_offset } | Sort LastLogonDate | FT Name, LastLogonDate -Autosize > "\\nettop-8\soft\pc.txt"
+	по алфавиту Get-ADComputer  -Properties LastLogonDate -Filter {LastLogonDate -lt $date_with_offset } | Sort-Object -Property Name | FT Name -Autosize > "\\nettop-8\soft\pc.txt"
+ 
+ Get-ADComputer -Filter * -Properties *  | Sort LastLogonDate | FT Name, LastLogonDate -Autosize > "\\nettop-8\soft\pc.txt"
+ 
+# список доступа
+(Get-ACL "\\192.168.4.231\usershare\_Подразделения_\Служба_Управления_Персоналом\Подр МСК").Access  | Select @{n="DisplayName"; e={([adsisearcher]"samaccountname=$($_.IdentityReference.Value.split("\")[1])").FindOne().Properties["displayname"]}},IdentityReference, FilesystemRights | Export-Csv -Encoding "Unicode" -Path "\\nettop-8\soft\FolderReport.csv" -Delimiter ";"
+
+#перенос отключенных пк 
+get-adcomputer -Filter {Enabled -eq "false" }| Move-ADObject -TargetPath “OU=Disabled_Pc,DC=action-crm,DC=local” 
+ 
+#Выгрузка из директории с исключением 
+$PathOU = "DC=action-crm,DC=local" 
+$user = Get-ADUser -Filter “*” -SearchScope Subtree -SearchBase $PathOU | ? {!$_.DistinguishedName.Contains(“OU=Partners_DISABLED,OU=CRMUsers,DC=action-crm,DC=local”)} | Select Name,SamAccountName |ft name,samaccountname -AutoSize > "\\nettop-008\soft\disabled.txt"  |ForEach-Object { $(foreach ($prop in 'Name','SamAccountName','Enabled') { $_.$prop }) -join '|'} | out-file -encoding default "\\nettop-008\soft\test.txt" -Append
+ 
+ 
+####
+DHCP
+Get-DhcpServerv4Scope -ComputerName "dc1.action-crm.local" -ScopeId 192.168.98.0 
+Get-DhcpServerv4lease -ComputerName "dc1.action-crm.local" -ScopeId 192.168.98.0
+ 
+ 
+
+#Получить количество компьютеров в Active Directory:
+Get-ADComputer -Filter {SamAccountName -like "*"} | Measure-Object
+
+#Список компьютеров, чьи имена начинаются с BuhPC:
+Get-ADComputer -Filter 'Name -like "BuhPC*"' -Properties IPv4Address | Format-table Name,DNSHostName,IPv4Address -A
+
+#Выбрать все рабочие станции с ОС Windows XP:
+
+
+#Выбрать только серверные системы:
+Get-ADComputer -Filter { OperatingSystem -Like '*Windows Server*' } -Properties name | Select-Object Name,OperatingSystem,OperatingSystemServicePack | Export-CSV All-Windows.csv -NoTypeInformation -Encoding UTF8
+
+#Получить список серверов в домена с версией ОС и установленным Service Pack:
+Get-ADComputer -Filter {OperatingSystem -Like '*Windows Server*' } -Property * | Format-Table Name,OperatingSystem,OperatingSystemServicePack -Wrap -Auto
+
+Чтобы удалить все аккаунты компьютеров в домене, не sortвходившие в домене более 6 месяцев, можете воспользоваться командой:
+
+get-adcomputer -properties lastLogonDate -filter * | where { $_.lastLogonDate -lt (get-date).addmonths(-6) } | Remove-ADComputer
+
+#Выбрать отключенные компьютеры в определенном OU:
+Get-ADComputer -filter * -SearchBase 'OU=Computers, dc=winitpro,dc=loc' | Where-Object {$_.enabled -eq $False}
+
+
+Foreach. В этом примере мы хотим сформировать список серверов в домене (в списке должны содержаться имя сервера, производитель и модель сервера).
+$Computers = Get-ADComputer -Filter {OperatingSystem -Like '*Windows Server*'}
+Foreach ($Computer in $Computers)
+{
+$Hostname = $Computer.Name
+$ComputerInfo = (Get-WmiObject -Computername $Hostname Win32_ComputerSystem)
+$Manufacturer = $Computer.Manufacturer
+$Model = $Computer.Model
+Write-Host "Name: $Hostname"
+Write-Host "Manufacturer: $Manufacturer"
+Write-Host "Model: $Model"
+Write-Host " "
+$Content = "$Hostname;$Manufacturer;$Model"
+Add-Content -Value $Content -Path "C:\PS\ServersInfo.txt"
+}
+
+#(в этом примере мы хотим запустить на всех серверах команду обновления групповых политик)
+get-adcomputer -SearchBase "OU=Servers,DC=winitpro,DC=loc" -Filter * | %{ Invoke-Command -Computer $_.Name -ScriptBlock {gpupdate /force} }
+
+
+
+
+
+Get-ADGroupMember "HighManagers" -Recursive | Select DistinguishedName
+Get-ADGroupMember -Identity ‘HighManagers’ -Recursive | ft name > "\\nettop-8\soft\HighManagers.txt"
+Get-ADGroupMember -Identity ‘HighManager’ -Recursive | ft name > "\\nettop-8\soft\HighManager.txt"
+Get-ADGroupMember -Identity ‘Domain Admins’ -Recursive | ft name > "\\nettop-8\soft\Domain Admins.txt"
+Get-ADGroupMember -Identity ‘P_SUP_Full’ -Recursive | ft name > "\\nettop-8\soft\P_SUP_Full.txt"
+Get-ADGroupMember -Identity ‘_SPPS_US_Podrazd_SUP_FULL’ -Recursive | ft name > "\\nettop-8\soft\_SPPS_US_Podrazd_SUP_FULL.txt"
+
+
+Get-ADGroupMember -Identity ‘P_SUP_Full’ -Recursive | ft name > "\\nettop-8\soft\P_SUP_Full.txt"
+
+
+
+dsquery group -name P_SUP_Full |dsget group -members |dsget user -display
+dsquery group -name P_SUP_Full* | dsget group -members |dsget user -display
+dsquery user ou=test,dc=domain,dc=local |dsget user -samid -display >>c:\users.txt
+
+
+
+
+
+
+ Get-ADUser -Filter {Enabled -eq "true" } -SearchBase 'OU=Jira2,DC=action-crm,DC=local' | Select-Object Name,samaccountname | Format-Table >> "\\nettop-8\soft\movelist.csv"
+ 
+ 
+
+
+Привожу скрипт на PowerShell, который собирает информацию по всем подкаталогам и правам доступа к ним в заданной папке,
+ а затем выгружает её в файл CSV в удобном для анализа виде 
+ 
+$share = "\\fileserver\share"
+(Get-ACL $share).Access  | Foreach {
+	$acl = $_
+	$id = $acl.IdentityReference.Value.split("\")[1]
+	try {
+		$obj = Get-ADObject -Filter "samaccountname -eq '$id'"
+		if(!$obj) {
+			$obj = [pscustomobject]@{Name = $acl.IdentityReference.Value}
+		}
+		
+		[pscustomobject]@{
+			Name = $obj.Name
+			IdentityReference = $acl.IdentityReference
+			AccessControlType = $acl.AccessControlType
+			FilesystemRights  = $acl.FilesystemRights
+		}
+		if($obj.ObjectClass -eq "group") {
+			Get-ADGroupMember $obj -Recursive | Foreach {
+				[pscustomobject]@{
+					Name = $_.Name
+					IdentityReference = $acl.IdentityReference
+					AccessControlType = $acl.AccessControlType
+					FilesystemRights  = $acl.FilesystemRights
+				}
+			}
+		}
+	}
+	catch {
+		[pscustomobject]@{
+			Name = $acl.IdentityReference.Value
+			IdentityReference = $acl.IdentityReference
+			AccessControlType = $acl.AccessControlType
+			FilesystemRights  = $acl.FilesystemRights
+		}
+	}
+} | Export-Csv -Encoding UTF8 -Path "c:\FolderReport.csv" -Delimiter ";" -NoTypeInformation
+
+
+##################PRINTERS
+
+ Get-ADObject -LDAPFilter "(objectCategory=printQueue)" -Properties * |where {$_.serverName -eq "Print01.hq.icfed.com"} | foreach {$_.printerName, $_.portName}
+Get-ADObject -LDAPFilter "(objectCategory=printQueue)" -Properties cn, drivername, location, printername, portname, servername | select portname, cn, drivername, location, printername, servername | Format-Table -Property * -AutoSize | Out-String -Width 4096
+
+
+ cls
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
+
+#For first run need install commands
+##Import-Module ServerManager
+##Add-WindowsFeature RSAT-AD-PowerShell,RSAT-AD-AdminCenter
+##Get-Module -ListAvailable ActiveDirectory
+##import-module activedirectory
+
+ #parametrs
+ $Printserver = 'Print01.hq.icfed.com'
+ $path = 'c:\temp'
+ get-date | out-file c:\temp\PrintserverPrinters.csv
+ ###
+ if (!(Test-Path $path)) {new-item c:\temp -itemtype directory}
+ 
+ #Priners Listed in Ad
+ #$adprinters=Get-ADObject -LDAPFilter "(objectCategory=printQueue)" -Properties * |where {$_.serverName -eq $Printserver} | foreach {$_.printerName, $_.portName}
+ #$end = ($adprinters).Count
+ #$end 
+ #$a=0
+ #$b=1
+ #Do {
+ #$IP = Get-PrinterPort $adprinters[$b] | foreach {$_.PrinterHostAddress}
+ #$adprinters[$a] +"|"+ $adprinters[$b] +"|"+ $IP | out-file c:\temp\PrintserverPrinters.csv -Append
+  #$a=$a+2
+ #$b=$b+2
+ # }Until($a -eq $end -or $b -eq $end)
+ 
+
+ #Priners NO Listed in Ad
+ #Get-Printer -ComputerName $Printserver |Select computername, name, portname
+
+$printerS = Get-Printer -ComputerName $Printserver |foreach {$_.Name}
+($printerS).count
+Foreach($printer in $Printers){
+$Port = Get-Printer $printer |foreach {$_.PortName}
+$IP = Get-PrinterPort $Port | foreach {$_.PrinterHostAddress}
+
+$Printer +"|"+ $port +"|"+ $IP | out-file c:\temp\PrintserverPrinters.csv -Append
+}
+write-host "OK"
+exit
+
+####
+(gwmi Win32_Printer).delete() в powershell от админа делитит все принтера, нужно перегрузить пк
+
+
+
+
+ Get-Printer -Name Press_HP_LaserJet_P2035n | foreach {$_.PrinterStatus}
