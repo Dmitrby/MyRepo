@@ -12,8 +12,12 @@ foreach ($computer in $pc){
    write-host "$computer is online" -BackgroundColor DarkGreen
 
 # запуск удалённой команды 
-    c:\PsExec.exe -d -s \\$computer "C:\Program Files (x86)\Symantec\Symantec Endpoint Protection\SepLiveUpdate.exe" cmd /S 
+    #c:\PsExec.exe -d -s \\$computer "C:\Program Files (x86)\Symantec\Symantec Endpoint Protection\SepLiveUpdate.exe" cmd /S 
     #c:\PsExec.exe -d -s \\$computer "C:\Program Files\Symantec\Symantec Endpoint Protection\SepLiveUpdate.exe" cmd /S 
+
+    c:\PsExec.exe -d -s \\$computer "taskkill /F /IM msiexec.exe" cmd /S 
+    c:\PsExec.exe -d -s \\$computer "\\uran.hq.icfed.com\SEP & Sylink Files\Install\SepInstall.bat" cmd /S 
+    
    } 
    else {
   
