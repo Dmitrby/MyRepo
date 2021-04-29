@@ -6,7 +6,7 @@ $VMName="ws-cloud13.amedia.loc"
 $date = get-date -Format "dd.MM.yyyy"
 # Выполняем настройку скрипта.
 $TargetFolder = "C:\Program Files\Temp\Trace" # Путь к папке логов.
-$Period = "-10" # Количество хранимых дней.
+$Period = "-7" # Количество хранимых дней.
 # Вычисляем дату после которой будем удалять файлы.
 $CurrentDay = Get-Date
 $ChDaysDel = $CurrentDay.AddDays($Period)
