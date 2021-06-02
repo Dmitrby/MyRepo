@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>5.0</version>
+    <date>2020-08-28T14:15:35Z</date>
+    <groups>
+        <group>
+            <name>Service.Antivirus</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Template SEP_antivirus</template>
+            <name>Template SEP_antivirus</name>
+            <description>SEPMC</description>
+            <groups>
+                <group>
+                    <name>Service.Antivirus</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>SEP</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>SEP PC Count</name>
+                    <key>SEP[&quot;AllPC&quot;]</key>
+                    <delay>1h</delay>
+                    <history>14d</history>
+                    <trends>30d</trends>
+                    <applications>
+                        <application>
+                            <name>SEP</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>SEP number of infected pc</name>
+                    <key>SEP[&quot;Infected&quot;]</key>
+                    <delay>1h</delay>
+                    <history>14d</history>
+                    <trends>30d</trends>
+                    <applications>
+                        <application>
+                            <name>SEP</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>SEP Name infected PC</name>
+                    <key>SEP[&quot;InfectedNames&quot;]</key>
+                    <delay>1h</delay>
+                    <history>14d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>SEP</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>SEP PC Offline</name>
+                    <key>SEP[&quot;Offline&quot;]</key>
+                    <delay>1h</delay>
+                    <history>14d</history>
+                    <trends>30d</trends>
+                    <applications>
+                        <application>
+                            <name>SEP</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>SEP Online PC</name>
+                    <key>SEP[&quot;Online&quot;]</key>
+                    <delay>1h</delay>
+                    <history>14d</history>
+                    <trends>30d</trends>
+                    <applications>
+                        <application>
+                            <name>SEP</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>SEPMC Version</name>
+                    <key>SEP[&quot;Sep&quot;]</key>
+                    <delay>1h</delay>
+                    <history>14d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <applications>
+                        <application>
+                            <name>SEP</name>
+                        </application>
+                    </applications>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>Sep discovery</name>
+                    <key>SEP[discovery]</key>
+                    <delay>1h</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>SepPcVersion {#VERSION} Count</name>
+                            <key>SEP[&quot;Vnum&quot;,{#NUMBER}]</key>
+                            <delay>1h</delay>
+                            <history>14d</history>
+                            <trends>30d</trends>
+                            <applications>
+                                <application>
+                                    <name>SEP</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+            </discovery_rules>
+        </template>
+    </templates>
+</zabbix_export>

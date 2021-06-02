@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>5.0</version>
+    <date>2021-06-02T05:11:34Z</date>
+    <groups>
+        <group>
+            <name>Service.Backup</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Bareos_Server_Template_Backup</template>
+            <name>Bareos_Server_Template_Backup</name>
+            <groups>
+                <group>
+                    <name>Service.Backup</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>Bareos director</name>
+                </application>
+                <application>
+                    <name>Bareos Jobs Date</name>
+                </application>
+                <application>
+                    <name>Bareos Jobs Files</name>
+                </application>
+                <application>
+                    <name>Bareos Jobs Result</name>
+                </application>
+                <application>
+                    <name>Bareos Jobs Size</name>
+                </application>
+                <application>
+                    <name>Bareos storage</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>Bareos director is running</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>bareos.director.run[9101]</key>
+                    <delay>600</delay>
+                    <history>7d</history>
+                    <applications>
+                        <application>
+                            <name>Bareos director</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{count(10m,1)}=0</expression>
+                            <name>Bareos director is down</name>
+                            <priority>AVERAGE</priority>
+                            <tags>
+                                <tag>
+                                    <tag>service</tag>
+                                    <value>backup</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>Bareos file daemon is running</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>bareos.file_daemon.run[9102]</key>
+                    <delay>600</delay>
+                    <history>7d</history>
+                    <applications>
+                        <application>
+                            <name>Bareos director</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{count(10m,1)}=0</expression>
+                            <name>Bareos file daemon is down</name>
+                            <priority>AVERAGE</priority>
+                            <tags>
+                                <tag>
+                                    <tag>service</tag>
+                                    <value>backup</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>Bareos storage is running</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>bareos.storage_daemon.run[9103]</key>
+                    <delay>3600</delay>
+                    <history>7d</history>
+                    <applications>
+                        <application>
+                            <name>Bareos director</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{count(10m,1)}=0</expression>
+                            <name>Bareos storage is down</name>
+                            <priority>AVERAGE</priority>
+                            <tags>
+                                <tag>
+                                    <tag>service</tag>
+                                    <value>backup</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>Discovery BareosJobs</name>
+                    <key>bareos.jobs[Discover]</key>
+                    <delay>1h</delay>
+                    <lifetime>7d</lifetime>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>{#NAME}: Bareos Job Last run date</name>
+                            <key>bareos.jobs[data,&quot;{#NAME}&quot;]</key>
+                            <delay>30m</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <applications>
+                                <application>
+                                    <name>Bareos Jobs Date</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>{#NAME}: Bareos Job Files number</name>
+                            <key>bareos.jobs[filesnum,&quot;{#NAME}&quot;]</key>
+                            <delay>30m</delay>
+                            <history>30d</history>
+                            <trends>30d</trends>
+                            <applications>
+                                <application>
+                                    <name>Bareos Jobs Files</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>{#NAME}: Bareos Job Result</name>
+                            <key>bareos.jobs[result,&quot;{#NAME}&quot;]</key>
+                            <delay>30m</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <applications>
+                                <application>
+                                    <name>Bareos Jobs Result</name>
+                                </application>
+                            </applications>
+                            <valuemap>
+                                <name>BareosJobsResult</name>
+                            </valuemap>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last()}=&quot;E&quot; or {last()}=&quot;B&quot; or {last()}=&quot;e&quot; or {last()}=&quot;f&quot; or {last()}=&quot;D&quot; or {last()}=&quot;A&quot; or {last()}=&quot;F&quot; or {last()}=&quot;S&quot; or {last()}=&quot;m&quot; or {last()}=&quot;M&quot; or {last()}=&quot;s&quot; or {last()}=&quot;j&quot; or {last()}=&quot;c&quot; or {last()}=&quot;d&quot; or {last()}=&quot;t&quot; or {last()}=&quot;p&quot; or {last()}=&quot;W&quot;</expression>
+                                    <name>Bareos Job  {#NAME} Error</name>
+                                    <priority>WARNING</priority>
+                                    <tags>
+                                        <tag>
+                                            <tag>service</tag>
+                                            <value>backup</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>{#NAME}: Bareos Job Size</name>
+                            <key>bareos.jobs[size,&quot;{#NAME}&quot;]</key>
+                            <delay>30m</delay>
+                            <history>30d</history>
+                            <trends>30d</trends>
+                            <value_type>FLOAT</value_type>
+                            <applications>
+                                <application>
+                                    <name>Bareos Jobs Size</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+            </discovery_rules>
+        </template>
+    </templates>
+    <value_maps>
+        <value_map>
+            <name>BareosJobsResult</name>
+            <mappings>
+                <mapping>
+                    <value>A</value>
+                    <newvalue>Canceled by the user</newvalue>
+                </mapping>
+                <mapping>
+                    <value>B</value>
+                    <newvalue>Blocked</newvalue>
+                </mapping>
+                <mapping>
+                    <value>c</value>
+                    <newvalue>Waiting for Client resource</newvalue>
+                </mapping>
+                <mapping>
+                    <value>C</value>
+                    <newvalue>Created but not yet running</newvalue>
+                </mapping>
+                <mapping>
+                    <value>D</value>
+                    <newvalue>Verify Differences</newvalue>
+                </mapping>
+                <mapping>
+                    <value>d</value>
+                    <newvalue>Wating for Maximum jobs</newvalue>
+                </mapping>
+                <mapping>
+                    <value>e</value>
+                    <newvalue>Non-fatal error</newvalue>
+                </mapping>
+                <mapping>
+                    <value>E</value>
+                    <newvalue>Terminated in Error</newvalue>
+                </mapping>
+                <mapping>
+                    <value>f</value>
+                    <newvalue>Fatal error</newvalue>
+                </mapping>
+                <mapping>
+                    <value>F</value>
+                    <newvalue>Waiting on the File daemon</newvalue>
+                </mapping>
+                <mapping>
+                    <value>j</value>
+                    <newvalue>Waiting for Job resource</newvalue>
+                </mapping>
+                <mapping>
+                    <value>m</value>
+                    <newvalue>Waiting for a new Volume to be mounted</newvalue>
+                </mapping>
+                <mapping>
+                    <value>M</value>
+                    <newvalue>Waiting for a Mount</newvalue>
+                </mapping>
+                <mapping>
+                    <value>p</value>
+                    <newvalue>Waiting for higher priority job to finish</newvalue>
+                </mapping>
+                <mapping>
+                    <value>R</value>
+                    <newvalue>Running</newvalue>
+                </mapping>
+                <mapping>
+                    <value>S</value>
+                    <newvalue>aiting on the Storage daemon</newvalue>
+                </mapping>
+                <mapping>
+                    <value>s</value>
+                    <newvalue>Waiting for Storage resource</newvalue>
+                </mapping>
+                <mapping>
+                    <value>t</value>
+                    <newvalue>Waiting for Start Time</newvalue>
+                </mapping>
+                <mapping>
+                    <value>T</value>
+                    <newvalue>Terminated normally</newvalue>
+                </mapping>
+                <mapping>
+                    <value>W</value>
+                    <newvalue>Terminated with warnings</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+    </value_maps>
+</zabbix_export>
