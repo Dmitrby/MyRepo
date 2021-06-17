@@ -282,3 +282,17 @@ exit
 
 
  Get-Printer -Name Press_HP_LaserJet_P2035n | foreach {$_.PrinterStatus}
+ 
+ ##DNSHostName
+ Get-DnsServerResourceRecord -ZoneName icfed.com -RRType A | Where-Object {$_.Timestamp -lt 1} | sort HostName
+ 
+ 
+###Dell Windows Defender
+Get-Service WinDefend | Fl
+Uninstall-WindowsFeature -Name Windows-Defender
+
+
+####system as VM###
+
+Get-WmiObject Win32_ComputerSystem | select model
+

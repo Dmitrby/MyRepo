@@ -1,0 +1,15 @@
+# Установка Salt-minion
+# Установка пакета для ключа репозитория
+sudo apt install curl -y
+# Установка ключа репозитория
+sudo curl -fsSL -o /usr/share/keyrings/salt-archive-keyring.gpg https://repo.saltproject.io/py3/ubuntu/20.04/amd64/latest/salt-archive-keyring.gpg
+# Установка репозитория
+echo "deb [signed-by=/usr/share/keyrings/salt-archive-keyring.gpg] https://repo.saltproject.io/py3/ubuntu/20.04/amd64/latest focal main" | sudo tee /etc/apt/sources.list.d/salt.list
+# Обновления риеестра пакетов
+sudo apt update
+# Установка миньйона
+sudo apt-get install salt-minion -y
+# Назначение мастера
+sudo sed -i 's/#master: salt/master: salt.hq.icfed.com/' /etc/salt/minion
+# Перезагрузка демона миньйона
+sudo service salt-minion restart

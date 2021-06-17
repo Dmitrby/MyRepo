@@ -1,0 +1,11 @@
+#Установка salt-minion Centos7
+
+sudo yum install https://repo.saltproject.io/yum/redhat/salt-repo-latest.el7.noarch.rpm
+sudo yum clean expire-cache
+sudo yum install salt-minion
+#Настройка мастера Salt
+sudo sed -i 's/#master: salt/master: salt.hq.icfed.com/' /etc/salt/minion
+#Запуск salt-minion
+sudo systemctl start salt-minion.service
+#Добавление в автозагрузку salt-minion
+sudo systemctl enable salt-minion.service
