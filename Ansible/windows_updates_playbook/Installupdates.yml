@@ -1,0 +1,25 @@
+---
+- hosts: windows
+  tasks:
+   - name: Install all critical and security updates
+     win_updates:
+       category_names:
+       - CriticalUpdates
+       - SecurityUpdates
+       - UpdateRollups
+       state: installed
+     register: update_result
+     ignore_errors: yes
+   - name: Print update Result
+     debug:
+       msg:
+       - "{{ update_result }}"
+       - "{{ update_result.reboot_required }}"
+
+   - name: Create Task To Reboot PC
+     win_shell: |
+       $Trigger= New-ScheduledTaskTrigger -At 23:15 -Once
+       $User= "NT AUTHORITY\SYSTEM"
+       $Action= New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "Restart-Computer -Force"
+       Register-ScheduledTask -TaskName "RebootPC" -Trigger $Trigger -User $User -Action $Action -RunLevel Highest -Force
+     when: update_result.reboot_required == true

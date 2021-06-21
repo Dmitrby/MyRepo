@@ -1,0 +1,23 @@
+sudo yum install epel-release
+sudo yum -y update
+sudo yum -y install ansible
+sudo yum -y install python-pip pip
+pip install pywinrm
+cd /etc/ansible
+vi hosts
+#[windows]
+#server1.domain.local
+#server1.domain.local
+
+mkdir group_vars
+cd group_vars
+ansible-vault create windows.yml
+## add
+ansible_ssh_user: user #if domain auth user@domainname
+ansible_ssh_pass: pass
+ansible_ssh_port: 5986
+ansible_connection: winrm
+ansible_winrm_transport: basic
+ansible_user: user #if domain auth user@domainname
+ansible_password: pass
+ansible_winrm_server_cert_validation: ignore

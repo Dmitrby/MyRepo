@@ -17,6 +17,8 @@ $ErrorActionPreference = 'SilentlyContinue'   - не выводить ошибк
 ****************************************************************************
 Add-PSSnapin Microsoft.Exchange.Management.PowerShell.SnapIn
 ****************************************************************************
+# длинный ввод без обрезки
+ft -HideTableHeaders -Wrap -autosize 
 
 Вывод без заголовка
 Get-ADComputer -Filter { OperatingSystem -Like '*Windows Server*' } -Properties DNSHostName | Select DNSHostName -ExpandProperty DNSHostName |out-file -encoding default  "\\crm00111\soft\servers.txt"
@@ -295,4 +297,42 @@ Uninstall-WindowsFeature -Name Windows-Defender
 ####system as VM###
 
 Get-WmiObject Win32_ComputerSystem | select model
+
+
+
+sudo salt-key -a "UFA236"
+sudo salt 'UFA236' state.apply
+
+
+
+salt-key --list=denied -d UFA231
+
+
+TAU.hq.icfed.com
+SRVVM-OLAP.hq.icfed.com
+SFB.hq.icfed.com
+
+
+
+
+
+вадика потрясти
+SRVVM-SKLAD.hq.icfed.com
+PRINTSKLAD.hq.icfed.com
+
+
+9v6ByZC7
+
+
+Get-DfsrState 
+Get-DfsrState | out-file c:\temp\1.txt
+Get-DfsrState |Where-Object {$_.UpdateState -eq "Downloading"}
+(Get-DfsrState |Where-Object {$_.UpdateState -eq "Downloading"}).count
+Get-DfsrState |Where-Object {$_.UpdateState -ne "Downloading"}
+Get-DfsrState |Where-Object {($_.UpdateState -ne "Downloading") -and ($_.UpdateState -ne "Scheduled")}
+
+
+(Get-DfsrState |Where-Object {$_.UpdateState -eq "Downloading"}).count
+
+Get-DfsrState | Where-Object {$_.FileName -like "TestF2.txt"}
 
