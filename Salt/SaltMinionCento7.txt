@@ -9,3 +9,6 @@ sudo sed -i 's/#master: salt/master: salt.hq.icfed.com/' /etc/salt/minion
 sudo systemctl start salt-minion.service
 #Добавление в автозагрузку salt-minion
 sudo systemctl enable salt-minion.service
+
+###minion
+sudo yum -y install https://repo.saltstack.com/yum/redhat/salt-repo-latest-2.el7.noarch.rpm && sudo yum clean expire-cache && sudo yum -y install salt-minion && echo "master: salt.hq.icfed.com" >> /etc/salt/minion && systemctl enable salt-minion && systemctl start salt-minion

@@ -1,0 +1,4 @@
+$Trigger= New-ScheduledTaskTrigger -Weekly -WeeksInterval 1  -DaysOfWeek Saturday -At 05:35pm
+$User= "NT AUTHORITY\SYSTEM"
+$Action= New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "Restart-Computer -Force"
+Register-ScheduledTask -TaskName "RebootPC" -Trigger $Trigger -User $User -Action $Action -RunLevel Highest –Force
