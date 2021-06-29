@@ -1,0 +1,35 @@
+---
+
+  # Install Windows update
+
+  - hosts: branch
+    roles:
+       - role: branch_installupdate
+
+  - hosts: ad_crm
+    roles:
+       - role: ad_installupdate
+
+  - hosts: ad_hq
+    roles:
+       - role: ad_installupdate
+
+  - hosts: ad_amedia
+    roles:
+       - role: ad_installupdate
+
+  - hosts: ad_icfed
+    roles:
+       - role: ad_installupdate
+
+  - hosts: antivirus
+    roles:
+       - role: no_reboot_installupdate
+       
+  - hosts: dfs
+    roles:
+       - role: no_reboot_installupdate
+       
+  - hosts: backup
+    roles:
+       - role: no_reboot_installupdate

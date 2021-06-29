@@ -336,3 +336,17 @@ Get-DfsrState |Where-Object {($_.UpdateState -ne "Downloading") -and ($_.UpdateS
 
 Get-DfsrState | Where-Object {$_.FileName -like "TestF2.txt"}
 
+###########   AD    ####################
+
+
+Get-ADDomain | Select-Object InfrastructureMaster, RIDMaster, PDCEmulator
+
+Get-ADForest | Select-Object DomainNamingMaster, SchemaMaster
+
+Get-ADDomainController -Filter * |
+
+     Select-Object Name, Domain, Forest, OperationMasterRoles |
+
+     Where-Object {$_.OperationMasterRoles} |
+
+     Format-Table -AutoSize

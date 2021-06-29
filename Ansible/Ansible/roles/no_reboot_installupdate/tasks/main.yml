@@ -1,0 +1,24 @@
+   - name: Install all critical and security updates
+     win_updates:
+       category_names:
+       - CriticalUpdates
+       - SecurityUpdates
+       - UpdateRollups
+       state: installed
+     register: update_result
+     ignore_errors: yes
+   - name: Print update Result
+     debug:
+       msg:
+       - "{{ update_result }}"
+       - "{{ update_result.reboot_required }}"
+
+   - name: Send mail if need Reboot PC
+     win_shell: |
+       $PSEmailServer = "exch03.hq.icfed.com"
+       $From = "ansible@action-press.ru"
+       $to = "boev@action-press.ru"
+       $Subject = "Server $env:COMPUTERNAME need reboot"
+       $Body = "Server $env:COMPUTERNAME was updatet and need reboot"
+       Send-MailMessage -From $From  -To $to -Subject $Subject -Body $Body
+     when: update_result.reboot_required == true

@@ -1,0 +1,7 @@
+---
+
+  # Install Windows update
+
+  - hosts: antivirus
+    roles:
+       - role: no_reboot_installupdate

@@ -1,0 +1,23 @@
+   - name: Install all critical and security updates
+     win_updates:
+       category_names:
+       - CriticalUpdates
+       - SecurityUpdates
+       - UpdateRollups
+       state: installed
+     register: update_result
+     ignore_errors: yes
+   - name: Print update Result
+     debug:
+       msg:
+       - "{{ update_result }}"
+       - "{{ update_result.reboot_required }}"
+
+   - name: Enable Task To Reboot PC
+     win_shell: |
+       Enable-ScheduledTask -TaskName RebootPC
+     when: update_result.reboot_required == true
+   - name: Disable Task To Reboot PC
+     win_shell: |
+       Disable-ScheduledTask -TaskName RebootPC
+     when: update_result.reboot_required == false

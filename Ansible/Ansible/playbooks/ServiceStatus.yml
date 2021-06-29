@@ -1,0 +1,29 @@
+- hosts: all
+  tasks:
+  - name: Check if a FusionInventory-Agent service is installed
+    win_service:
+      name: FusionInventory-Agent
+    register: service_info
+  - name: FusionInventory-Agent Result
+    debug:
+      msg:
+      - "{{ service_info.state }}"
+  - name: Start service FusionInventory-Agent
+    win_service:
+      name: FusionInventory-Agent
+      state: started
+      when: service_info.state == stopped
+
+  - name: Check if a winlogbeat service is installed
+    win_service:
+      name: winlogbeat
+    register: service_info
+  - name: winlogbeat Result
+    debug:
+      msg:
+      - "{{ service_info.state }}"
+  - name: Start service winlogbeat
+    win_service:
+      name: winlogbeat
+      state: started
+      when: service_info.state != running
