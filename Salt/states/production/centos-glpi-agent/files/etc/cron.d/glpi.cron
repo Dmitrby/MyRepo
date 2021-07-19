@@ -1,0 +1,1 @@
+00 18 * * * root /usr/bin/fusioninventory-agent --wait=21600 --debug > /var/lib/fusioninventory-agent/cron.log 2>&1

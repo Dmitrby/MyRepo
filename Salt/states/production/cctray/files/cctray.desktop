@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=CCTRAY
+Comment=Action-MCFR VoIP
+Exec=java -jar /opt/cctray/CCTray-2.1.53.m2-SNAPSHOT.jar
+Icon=/opt/cctray/cctray.ico
+Path=/opt/cctray
+Terminal=false
+StartupNotify=false
+Categories=Application;VOIP;
