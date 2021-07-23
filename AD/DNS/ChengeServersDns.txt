@@ -1,0 +1,28 @@
+#список для подключения
+#$servers = Get-ADComputer -Filter { OperatingSystem -Like '*Windows Server*' } -Properties DNSHostName|Select DNSHostName -ExpandProperty DNSHostName
+$servers = "REC1.action-crm.local"
+
+#подключение по списку
+foreach ($Server in $servers) {
+
+$error.clear()
+Enter-PSSession $Server | Out-Null
+if ($error.Count -gt 0){
+    Write-Host "$server error connection" -ForeGroundColor RED
+}
+else {
+	Invoke-Command -ComputerName $Server -ScriptBlock {
+	$Server
+	#получить ид ipv4 интерфейса с активным гейтвеем
+	$indexId = Get-NetIPConfiguration -All -Detailed | Where-Object {$_.IPv4DefaultGateway -ne $null} | foreach { $_.InterfaceIndex}
+
+	#для каждого ид интерфейса установить ДНС
+	foreach ($index in $indexId ){
+	Set-DNSClientServerAddress –InterfaceIndex $index  –ServerAddresses 10.5.204.11,10.101.30.13,10.101.30.11
+	}#close foreach
+	}#close Invoke-Command
+}#close else
+
+Exit-PSSession
+
+}#close foreach
