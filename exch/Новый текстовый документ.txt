@@ -1,0 +1,49 @@
+#####Добавить Алиасы к почтовым ящикам
+#фильтрация пользователей
+$maildomen = "@action.group"
+
+#выгрузить пользователей из бд
+$useres = Get-Mailbox -Database TESTBD | foreach { $_.alias}
+#Выгрузить список аккаунтов по фильтру
+$mailboxes = @()
+foreach($user in $useres){
+$result = Get-Mailbox $user |Where-Object {($_.EmailAddresses -like "*@action-media.ru") -or ($_.EmailAddresses -like "*@action-mcfr.ru")}| select SamAccountName
+$mailboxes=$mailboxes + $result
+}#exit foreach
+write-host "Найдено "$mailboxes.count" почтовых ящиков для добавления"  -ForegroundColor Cyan -BackgroundColor DarkYellow
+
+#Добавить Алиасы к почтовым ящикам
+Foreach($mailbox in $mailboxes) {
+$new =$mailbox.SamAccountName
+$addmail=(Get-Mailbox $new | foreach{$_.PrimarySmtpAddress}).local
+Set-Mailbox $new -EmailAddresses @{add = "$addmail$maildomen" }
+}#exit foreach
+
+
+#####проверка добавленных алиесов
+#фильтрация пользователей
+$maildomen = "@action.group"
+#выгрузить пользователей из бд
+$userescheck = Get-Mailbox -Database TESTBD | foreach { $_.alias}
+#Выгрузить список аккаунтов по фильтру
+$mailboxescheck = @()
+foreach($usercheck in $userescheck){
+$resultcheck = Get-Mailbox $usercheck |Where-Object {($_.EmailAddresses -like "*$maildomen")}| select SamAccountName
+$mailboxescheck=$mailboxescheck + $resultcheck
+}#exit foreach
+write-host "Найдено "$mailboxescheck.count" почтовых ящиков с добавленным алиесом"  -ForegroundColor DarkRed -BackgroundColor Yellow
+
+
+#####меняет примари smtp
+$smtpfilter = "@action.group"
+#выгрузить пользователей из бд
+$useres = Get-Mailbox -Database TESTBD | foreach { $_.alias}
+#Выгрузить список аккаунтов по фильтру
+foreach($user in $useres){
+	if ((Get-Mailbox $user | Where-Object {($_.EmailAddresses -like "*$smtpfilter")}) -ne $NULL){
+	$setprimary=(Get-Mailbox $user | Where-Object {($_.EmailAddresses -like "*$smtpfilter")}| foreach {$_.EmailAddresses}  | Where-Object {($_.SmtpAddress -like "*$smtpfilter")}| foreach {$_.SmtpAddress}).Split("@")[0]
+	$setprimary
+	set-Mailbox $user -PrimarySmtpAddress $setprimary$smtpfilter
+	}#exit if
+}#exit foreach
+

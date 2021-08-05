@@ -1,0 +1,134 @@
+Использование PowerShell для настройки Hyper-V Server 2019
+
+Для настройки сервера рекомендую использовать PowerShell. В модуле ModuleHyper-V доступно более 1641 командлетов для управления сервером Hyper-V.
+
+Get-Command –ModuleHyper-V | Measure-Object
+
+ModuleHyper-V
+
+Настройте автоматический запуск консоли PowerShell при входе в систему.
+
+New-ItemProperty -path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\run -Name PowerShell -Value "cmd /c start /max C:\Windows\system32\WindowsPowerShell\v1.0\powershell.exe -noExit" -Type string
+
+автозапуск консоли powershell в hyper-v 2019
+
+Теперь при входе в сеанс будет запускаться окно PowerShell.
+Настройка параметров сети Hyper-V Server 2019 из PowerShell
+
+Если вы не настраивали сетевые параметры в окне sconfig.cmd, то настройте их через PowerShell. С помощью командлета Get-NetIPConfiguration можно увидеть текущую конфигурацию IP сетевых интерфейсов.
+
+Get-NetIPConfiguration
+
+Назначьте статический IP адрес, маску сети, шлюз по умолчанию и адреса DNS серверов. Индекс (InterfaceIndex) сетевого адаптера берем из вывода предыдущего командлета.
+
+New-NetIPAddress -InterfaceIndex 4 -IPAddress 192.168.1.2 -DefaultGateway 192.168.1.1 -PrefixLength 24
+
+New-NetIPAddress
+
+Set-DnsClientServerAddress -InterfaceIndex 4 -ServerAddresses 192.168.1.3,192.168.1.4
+
+Set-DnsClientServerAddress
+
+Для настройки IPV6 смотрим имя интерфейса командлетом Get-NetAdapter из PowerShell модуля управления сетью NetTCPIP:
+
+Get-NetAdapter
+
+Проверьте текущую настройку IPV6 следующей командой:
+
+Get-NetAdapterBinding -InterfaceDescription "Intel(R) PRO/1000 MT Network Connection" | Where-Object -Property DisplayName -Match IPv6 | Format-Table –AutoSize
+
+Get-NetAdapterBinding IPv6
+
+Отключить IPV6 можно так:
+
+Disable-NetAdapterBinding -InterfaceDescription " Intel(R) PRO/1000 MT Network Connection " -ComponentID ms_tcpip6
+Настройка правил Advanced Firewall для управления Hyper-V Server 2019
+
+Просмотреть список командлетов для управления файерволом Windows можно с помощью Get-Command.
+
+Get-Command -Noun *Firewall* -Module NetSecurity
+
+NetSecurity powershell module
+
+Для полноценного удаленного управления сервером выполните последовательно следующие команды для включения разрешающих правил Windows Firewall из PoSh:
+
+Enable-NetFireWallRule -DisplayName "Windows Management Instrumentation (DCOM-In)"
+Enable-NetFireWallRule -DisplayGroup "Remote Event Log Management"
+Enable-NetFireWallRule -DisplayGroup "Remote Service Management"
+Enable-NetFireWallRule -DisplayGroup "Remote Volume Management"
+Enable-NetFireWallRule -DisplayGroup "Windows Defender Firewall Remote Management"
+Enable-NetFireWallRule -DisplayGroup "Remote Scheduled Tasks Management"
+Создание дискового хранилища для виртуальных машин
+
+Для хранения данных (файлов виртуальных машин и дистрибутивов) будем использовать отдельный раздел на физическом диске. Просмотрите список физических дисков на сервере.
+
+Get-Disk
+
+Get-Disk hyper-v 2019
+
+Создайте новый раздел на диске максимально возможного размера и назначьте ему букву D. Используйте DiskNumber из Get-Disk.
+
+New-Partition -DiskNumber 0 -DriveLetter D –UseMaximumSize
+
+После этого отформатируйте раздел в NTFS и укажите его метку.
+
+Format-Volume -DriveLetter D -FileSystem NTFS -NewFileSystemLabel "HVStore"
+Подробнее о командлетах управления дисками и разделами из PowerShell здесь.
+
+Создайте каталог, где будете хранить настройки и файлы дисков виртуальных машин. Командлет New-Item позволяет создавать вложенные пути:
+
+New-Item -Path "D:\Hyper-V\Virtual Hard Disks" -Type Directory
+
+Создайте папку D:\Distrib для хранения дистрибутивов ОС:
+
+New-Item -Path D:\Distr -ItemType Directory
+
+Для создания шары используйте командлет New-SmbShare, с помощью которого дайте полный доступ по сети для группы локальных администраторов сервера:
+
+New-SmbShare -Path D:\Distr -Name Distr -Description "OS Distributives" -FullAccess "BUILTIN\Administrators"
+Настройка параметров хоста в Hyper-V Server 2016/2019
+
+Откроем параметры сервера командой:
+
+Get-VMHost | Format-List
+
+Get-VMHost
+
+Пути виртуальных машин и виртуальных дисков находятся на одном разделе с операционной системой, что неправильно. Пропишите путь к созданным ранее папкам с помощью команды:
+
+Set-VMHost -VirtualMachinePath D:\Hyper-V -VirtualHardDiskPath 'D:\Hyper-V\Virtual Hard Disks'
+Создание виртуального коммутатора Hyper-V
+
+Создайте External Switch, который привязывается к сетевой карте Hyper-V Server и организует взаимодействие ВМ с физической сетью.
+
+Проверьте поддержку SR-IOV (Single-Root Input/Output (I/O) Virtualization):
+
+Get-NetAdapterSriov
+
+Получите список подсоединенных сетевых адаптеров:
+
+Get-NetAdapter | Where-Object -PropertyStatus –eqUp
+
+ Get-NetAdapter | Where-Object {$_.Status -eq "Up"}
+
+Привяжите виртуальный свитч к сетевому адаптеру и при наличии SR-IOV включите его поддержку.
+Внимание! Включить или отключить поддержку SR-IOV после создания свитча будет невозможно, для изменения этого параметра необходимо будет пересоздавать коммутатор.
+
+New-VMSwitch -Name "Extenal_network" -NetAdapterName "Ethernet 2" -EnableIov 1
+
+Проверить настройки виртуального коммутатора можно с помощью командлетов:
+
+Get-VMSwitch
+Get-NetIPConfiguration –Detailed
+
+На этом первоначальная настройка Hyper-V Server 2016/2019 закончена. Можно переходить к созданию и настройке виртуальных машин.
+Нравится
+Станьте первыми кому понравится это
+
+
+
+2.1. На сервере с помощью powershell ставим компонент   Add-WindowsFeature -Name 'Multipath-IO'.
+
+2.2. Прописываем для дисков: mpclaim.exe -r -i -a ""
+
+2.3. Прописываем для авто подключения дисков:  DISKPART> san policy=OnlineAll
