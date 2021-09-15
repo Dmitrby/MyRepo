@@ -1,0 +1,28 @@
+### resize disk vm vmware
+# При добавлении SAN раздела
+echo "1" > /sys/class/fc_host/host7/issue_lip
+echo "1" > /sys/class/fc_host/host8/issue_lip
+echo "- - -" > /sys/class/scsi_host/host7/scan
+echo "- - -" > /sys/class/scsi_host/host8/scan 
+ 
+ 
+multipath -ll
+echo 1 > /sys/bus/scsi/drivers/sd/2\:0\:0\:2/rescan
+echo 1 > /sys/bus/scsi/drivers/sd/2\:0\:1\:2/rescan
+echo 1 > /sys/bus/scsi/drivers/sd/3\:0\:0\:2/rescan
+echo 1 > /sys/bus/scsi/drivers/sd/3\:0\:1\:2/rescan
+# или 
+blockdev --rereadpt /dev/sd{a,b,c,d}
+multipathd resize map 360050768028105918000000000000038 # multipath -r лучше не использовать 
+pvdisplay
+pvresize /dev/dm-3
+pvdisplay
+pvresize /dev/dm-2
+pvdisplay
+lvextend -l+100%FREE /dev/mapper/vg_db-lv_db
+# для ext3,4
+resize2fs /dev/mapper/vg_db-lv_db
+# для xfs
+xfs_growfs /dev/mapper/vg_db-lv_db
+# Узнать тип файловой системы можно так
+file -sL /dev/mapper/vg_db-lv_db
