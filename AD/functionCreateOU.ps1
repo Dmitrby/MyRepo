@@ -1,15 +1,19 @@
-# check-create OU function
+cls
+$OUN = "OU=Test1,OU=Employees,DC=moskvich,DC=ru"
+
+# check OU function
+function global:OUsearch{
+param([string]$inString)
+if([bool] (Get-ADOrganizationalUnit -Filter * | ? {$_.Distinguishedname -eq $inString} ))
+{ return 1  }
+else { return 0 } 
+}#end function global:OUsearch
+
+# create OU function
 function global:Create{
     param([string]$OUName)
         $create = $searh  = "OU=Employees,DC=moskvich,DC=ru" # начальная OU для создания ерархии
-        function global:OUsearch{
-        param([string]$inString)
-            if([bool] (Get-ADOrganizationalUnit -Filter * | ? {$_.Distinguishedname -eq $inString} ))
-            { $OU =1  }
-            else { $OU = 0 } 
-            $OU
-            }#end function global:OUsearch
-            if (OUsearch($OUName) -eq 1) {} 
+            if (OUsearch($OUName) -eq 1) {return "earli created"} 
                 else {$path1 = $OUName.split(",")
                       $i =$path1.count -4  #так как с 0 нужно отнять 4 (3 элемента)
                       $count =0
@@ -23,3 +27,5 @@ function global:Create{
                         }# end while
                 }#end if
 }#end function global:Create
+
+create $OUN
