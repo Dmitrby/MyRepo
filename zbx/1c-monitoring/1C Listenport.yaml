@@ -1,0 +1,31 @@
+zabbix_export:
+  version: '6.2'
+  date: '2023-04-06T08:16:00Z'
+  template_groups:
+    -
+      uuid: d3f385974c5f44a9be30ea6d4861add2
+      name: 1C
+  templates:
+    -
+      uuid: 0f46bffcb4fb4f4f8006ee80f4a1a0f8
+      template: '1C Listenport'
+      name: '1C Listenport'
+      description: 'Listen port 1541'
+      groups:
+        -
+          name: 1C
+      items:
+        -
+          uuid: 17cc5cbd2e09469cb7b922e805c1bcaf
+          name: 'Listen port 1541'
+          type: SIMPLE
+          key: 'net.tcp.service[tcp,,1541]'
+          tags:
+            -
+              tag: ListenPort
+          triggers:
+            -
+              uuid: aba36441e46b421ba5d350e969bacdc7
+              expression: 'last(/1C Listenport/net.tcp.service[tcp,,1541])=0'
+              name: '1C service is unavailable port 1541 down'
+              priority: HIGH

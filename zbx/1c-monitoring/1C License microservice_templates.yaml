@@ -1,0 +1,213 @@
+zabbix_export:
+  version: '6.2'
+  date: '2023-04-06T08:15:52Z'
+  template_groups:
+    -
+      uuid: d3f385974c5f44a9be30ea6d4861add2
+      name: 1C
+  templates:
+    -
+      uuid: f96c975dfd074c69b5925264242645e9
+      template: '1C License microservice'
+      name: '1C License microservice'
+      description: |
+        #windows
+        sc create "1C:Enterprise RAS" binpath= "\"C:/Program Files/1cv8/8.3.22.1704/bin/ras.exe\" cluster --service --port=1545 localhost:1540" 
+        #
+        UserParameter=1c.check[*],powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Program Files\Zabbix Agent 2\zabbix_agent2.d\1clic.ps1" "$1"
+      templates:
+        -
+          name: '1C Listenport'
+      groups:
+        -
+          name: 1C
+      items:
+        -
+          uuid: b5e336682f97457aaa67ac1823b09620
+          name: '1C Check'
+          key: '1c.check[discovery]'
+          delay: 2m
+          trends: '0'
+          value_type: TEXT
+          tags:
+            -
+              tag: '1C Sessions'
+        -
+          uuid: 1fdfdc934cae462cb57e09d0c3aca40b
+          name: '1C Keys'
+          key: '1c.check[LicenseKeys]'
+          delay: 2m
+          trends: '0'
+          value_type: TEXT
+          tags:
+            -
+              tag: '1C Keys'
+          triggers:
+            -
+              uuid: 532f9936a4244cfeb212e3ea64107df1
+              expression: 'last(/1C License microservice/1c.check[LicenseKeys])>645'
+              name: 'Too many used licenses {ITEM.LASTVALUE}'
+              priority: HIGH
+        -
+          uuid: db0254a3fedb43dba21eb6fd98be852b
+          name: '1C Sessions'
+          key: '1c.check[Sessions]'
+          delay: 10m
+          history: 7d
+          trends: '0'
+          status: DISABLED
+          value_type: TEXT
+          tags:
+            -
+              tag: Sessions
+        -
+          uuid: 1bcb569273b744748f8058f4cc9f20ea
+          name: 'Total Keys'
+          type: DEPENDENT
+          key: 1c.keys.total
+          delay: '0'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.[0].TotalKey'
+          master_item:
+            key: '1c.check[LicenseKeys]'
+          tags:
+            -
+              tag: '1C Keys'
+        -
+          uuid: b73e07f5c0604ca8b08c1cf34aa27d5c
+          name: 'Total sessions'
+          type: DEPENDENT
+          key: 1c.keys.total.sessions
+          delay: '0'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.[0].Totalsessions'
+          master_item:
+            key: '1c.check[discovery]'
+          tags:
+            -
+              tag: '1C Sessions'
+          triggers:
+            -
+              uuid: 31edc0355a8b46e5855c7e2f372f21b7
+              expression: 'last(/1C License microservice/1c.keys.total.sessions)>=1000'
+              name: 'Too many sessions {ITEM.LASTVALUE}'
+              priority: HIGH
+        -
+          uuid: 170b8510e7b944b5a41d79dffd8ce8c5
+          name: 'Total Sleep Sessions'
+          type: DEPENDENT
+          key: 1c.total.sessions
+          delay: '0'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.[0].TotalSleep'
+          master_item:
+            key: '1c.check[discovery]'
+          tags:
+            -
+              tag: '1C Sessions'
+        -
+          uuid: 29c6174a5953419889d15fee4c966366
+          name: 1cDataToGraylog
+          key: 'system.run[powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Program Files\Zabbix Agent 2\zabbix_agent2.d\1clic.ps1" ToGraylog,nowait]'
+          delay: 10m
+          trends: '0'
+          value_type: TEXT
+          tags:
+            -
+              tag: Sessions
+      discovery_rules:
+        -
+          uuid: 9c4806807ca541c6844a3569de48feaa
+          name: 'Discovery sessions'
+          type: DEPENDENT
+          key: 1c.check.discovery
+          delay: '0'
+          item_prototypes:
+            -
+              uuid: b8a7c173828a4400886c6be30b653594
+              name: 'Sessions {#APP}'
+              type: DEPENDENT
+              key: '1c.check.[sessions.count.{#SLOT}]'
+              delay: '0'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.[{#SLOT}].Sessions'
+              master_item:
+                key: '1c.check[discovery]'
+              tags:
+                -
+                  tag: '1C Sessions'
+          master_item:
+            key: '1c.check[discovery]'
+          lld_macro_paths:
+            -
+              lld_macro: '{#APP}'
+              path: $.APP
+            -
+              lld_macro: '{#SLOT}'
+              path: $.Slot
+            -
+              lld_macro: '{#SESSIONS}'
+              path: $.Sessions
+            -
+              lld_macro: '{#LICENSE}'
+              path: $.License
+            -
+              lld_macro: '{#TOTALSESSIONS}'
+              path: $.Totalsessions
+        -
+          uuid: 6765cfe9e4dc4b3aac1c927b14aa283c
+          name: 'License keys'
+          type: DEPENDENT
+          key: 1c.key.LicenseKeys
+          delay: '0'
+          lifetime: 1h
+          item_prototypes:
+            -
+              uuid: 5ef2b925b34e4563a457e813d78f65ae
+              name: 'Key {#KEYNUMBER} {#LICSERVER} {#LICONKEY}'
+              type: DEPENDENT
+              key: '1c.key.[used.keys.{#SLOT}]'
+              delay: '0'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.[{#SLOT}].Usedkey'
+              master_item:
+                key: '1c.check[LicenseKeys]'
+              tags:
+                -
+                  tag: '1C Keys'
+          master_item:
+            key: '1c.check[LicenseKeys]'
+          lld_macro_paths:
+            -
+              lld_macro: '{#KEYNUMBER}'
+              path: $.KeyNumber
+            -
+              lld_macro: '{#SLOT}'
+              path: $.Slot
+            -
+              lld_macro: '{#USEDKEY}'
+              path: $.Usedkey
+            -
+              lld_macro: '{#LICSERVER}'
+              path: $.LicServer
+            -
+              lld_macro: '{#LICONKEY}'
+              path: $.LicOnKey
+      macros:
+        -
+          macro: '{$C1_URL}'
