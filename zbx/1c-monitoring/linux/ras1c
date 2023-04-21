@@ -1,0 +1,59 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          ras1c
+# Required-Start:    $remote_fs $network $syslog $named
+# Required-Stop:     $remote_fs $network $syslog $named
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Description:       1C:Enterprise 8.3 Remote Administration Server
+### END INIT INFO
+
+
+SCRIPTNAME="/etc/init.d/ras1c"
+NAME="ras"
+#DAEMON="/opt/1C/v8.3/x86_64/ras"
+DAEMON="/opt/1cv8/x86_64/8.3.22.1704/ras"
+DAEMON_ARGS=" cluster"
+PIDFILE="/var/run/ras1c.pid"
+DESC="1C:Enterprise 8.3 Remote Administration Server"
+
+[ -x "$DAEMON" ] || exit 0
+
+. /lib/init/vars.sh
+. /lib/lsb/init-functions
+
+
+case "$1" in
+  start)
+	log_daemon_msg "Starting $DESC" || true
+	if start-stop-daemon --start --quiet --oknodo -b --exec $DAEMON $DAEMON_ARGS --pidfile $PIDFILE; then
+	   log_end_msg 0 || true
+	else
+	   log_end_msg 1 || true
+	fi
+	;;
+  stop)
+	log_daemon_msg "Stopping $DESC" || true
+	if start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE; then
+	   log_end_msg 0 || true
+	   kill $(pidof $NAME)
+	   #rm -f $PIDFILE
+	else
+	   log_end_msg 1 || true
+	fi
+	;;
+  restart|reload)
+	log_daemon_msg "Restarting $DESC"
+	$0 stop
+	$0 start
+	;;
+  status)
+	status_of_proc "$DAEMON" && exit 0 || exit $?
+       ;;
+  *)
+	echo "Usage: $SCRIPTNAME {start|stop|status|restart|reload}" >&2
+	exit 1
+	;;
+esac
+
+exit 0
