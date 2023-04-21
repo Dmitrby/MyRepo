@@ -11,6 +11,8 @@ https://ohmyz.sh/
 ## packages 
 ```
 apt-get update && apt-get upgrade -y && apt-get install -y locales && localedef -i en_US -c -f -A /usr/share/locale/locale.alias en_US.UTF-8
+apt-get install -y jq build-essential bash-completion bsdmainutils procps file git apt-transport-https ca-certificates curl sudo software-properties-common
+
 ```
 ## kubectl
 ```
