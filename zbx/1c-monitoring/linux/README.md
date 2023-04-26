@@ -17,6 +17,17 @@
 5. systemctl restart zabbix-agent2
 ```
 
+## настройка скрипта
+```
+#from root user
+0. копируем requirements.txt в /etc/zabbix/scripts
+1. apt update -y && apt upgrade -y
+2. apt install python3
+3. apt install python3-pip
+4. pip install -r requirements.txt
+
+```
+
 ###
 path="/opt/1cv8/x86_64/8.3.22.1704/rac"
 ###
@@ -25,3 +36,4 @@ path="/opt/1cv8/x86_64/8.3.22.1704/rac"
  - discovery  # возвращает данные по сессиям (число подключений, куда подключены)
  - LicenseKeys # Возвращает данные по ключам (число ключей, сколько используется)
  - Sessions # возвращвет поджробную информацию по сессиям
+ - ToGraylog # отправка логов в graylog
