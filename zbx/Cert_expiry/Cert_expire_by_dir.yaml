@@ -1,0 +1,66 @@
+zabbix_export:
+  version: '6.2'
+  date: '2023-08-14T10:30:51Z'
+  template_groups:
+    -
+      uuid: a571c0d144b14fd4a87a9d9b2aa9fcd6
+      name: Templates/Applications
+  templates:
+    -
+      uuid: 6228de3ba34348729a6ac9d5403a74f8
+      template: 'Certs expiry days'
+      name: 'Certs expiry days'
+      description: |
+        UserParameter=certs.jobs[*],/etc/zabbix/scripts/expirycerts.sh $1 $2
+        need: setfacl -m u:zabbix:rx -R {$DIRECTORY}
+        need: openssl
+        
+        Discovery
+        1. считывает сертификаты из директории по маске *.crt
+        2. сортирует по имени
+        
+        Для каждого сертификата выгружает дни до истечения
+      groups:
+        -
+          name: Templates/Applications
+      discovery_rules:
+        -
+          uuid: 4c237707c6bc4189ba036e5a85540892
+          name: 'Discovery Certs'
+          key: 'certs.jobs[{$DIRECTORY},Discover]'
+          delay: 1h
+          lifetime: 7d
+          item_prototypes:
+            -
+              uuid: cce21df7e740471db95e08942fbbbe4f
+              name: 'Certs {#NAME} days to expire'
+              key: 'certs.jobs[{$DIRECTORY},{#NAME}]'
+              delay: 10m
+              tags:
+                -
+                  tag: Certs
+                  value: Expiry
+              trigger_prototypes:
+                -
+                  uuid: b701527ae9b9455f8264116a30c2ae59
+                  expression: 'last(/Certs expiry days/certs.jobs[{$DIRECTORY},{#NAME}])<=1'
+                  name: 'less than 1 days before the certificate expires {#NAME}'
+                  priority: DISASTER
+                -
+                  uuid: 5e7bce36b5164c33be0960e4fd8d7047
+                  expression: 'last(/Certs expiry days/certs.jobs[{$DIRECTORY},{#NAME}])<=14'
+                  name: 'less than 14 days before the certificate expires {#NAME}'
+                  priority: HIGH
+                -
+                  uuid: 943ac881e6b54255a971c8d708f58e96
+                  expression: 'last(/Certs expiry days/certs.jobs[{$DIRECTORY},{#NAME}])<30'
+                  name: 'less than 30 days before the certificate expires {#NAME}'
+                  priority: INFO
+      tags:
+        -
+          tag: Certs
+          value: Expiry
+      macros:
+        -
+          macro: '{$DIRECTORY}'
+          description: 'directory where the certificates are located'
