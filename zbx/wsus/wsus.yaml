@@ -1,0 +1,55 @@
+zabbix_export:
+  version: '6.2'
+  date: '2023-08-24T06:13:59Z'
+  template_groups:
+    -
+      uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    -
+      uuid: 02abd0700ce74ad7bcb906717e7a9673
+      template: WSUS
+      name: WSUS
+      description: |
+        Для работы в конфигурации агента необходимо разрешить
+        -------
+        AllowKey=system.run[powershell -c "((Get-WsusUpdate -Approval Unapproved -Status Needed).count)"]
+        AllowKey=system.run[powershell -c "((Get-WsusUpdate -Approval Approv -Status Needed).count)"]
+        --или ---
+        AllowKey=system.run[*]
+      groups:
+        -
+          name: Templates
+      items:
+        -
+          uuid: 2fca5c11b1b24565a8f97a0fb471e90a
+          name: 'wsus updates needed to install count'
+          key: 'system.run[powershell -c "((Get-WsusUpdate -Approval Approv -Status Needed).count)"]'
+          delay: 10m
+          tags:
+            -
+              tag: wsus
+          triggers:
+            -
+              uuid: 826f373948e54bf8b22dea4882e75a8a
+              expression: 'last(/WSUS/system.run[powershell -c "((Get-WsusUpdate -Approval Approv -Status Needed).count)"])>0'
+              name: '{HOST.NAME} {ITEM.LASTVALUE1}  updates needs installation'
+              priority: INFO
+        -
+          uuid: d30e9e9d928947ea83b4317ddfaf9612
+          name: 'wsus need approve updates count'
+          key: 'system.run[powershell -c "((Get-WsusUpdate -Approval Unapproved -Status Needed).count)"]'
+          delay: 10m
+          tags:
+            -
+              tag: wsus
+          triggers:
+            -
+              uuid: 12a1d035bc004d7f967830eb6ee1fe9f
+              expression: 'last(/WSUS/system.run[powershell -c "((Get-WsusUpdate -Approval Unapproved -Status Needed).count)"])>0'
+              name: '{HOST.NAME} {ITEM.LASTVALUE1} updates need approve'
+              priority: INFO
+      tags:
+        -
+          tag: wsus
+          value: updates
