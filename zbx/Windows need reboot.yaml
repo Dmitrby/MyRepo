@@ -1,0 +1,53 @@
+zabbix_export:
+  version: '6.2'
+  date: '2023-08-24T06:12:08Z'
+  template_groups:
+    -
+      uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    -
+      uuid: 0fc573e0996349149a8865c6ea4bd96e
+      template: 'windows need reboot'
+      name: 'windows need reboot'
+      description: |
+        Для работы в конфигурации агента необходимо разрешить
+        -------
+        AllowKey=system.run[powershell -c "!(Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired' -ErrorAction SilentlyContinue)"]
+        --или ---
+        AllowKey=system.run[*]
+      groups:
+        -
+          name: Templates
+      items:
+        -
+          uuid: 0b3d0c263f8240ed863da05a76c31fe7
+          name: 'Need reboot status'
+          key: 'system.run[powershell -c "!(Get-ItemProperty -Path ''HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired'' -ErrorAction SilentlyContinue)"]'
+          delay: 10m
+          trends: '0'
+          value_type: TEXT
+          description: |
+            False - reboot required
+            True   - rebut not required
+          preprocessing:
+            -
+              type: STR_REPLACE
+              parameters:
+                - 'False'
+                - '1'
+            -
+              type: STR_REPLACE
+              parameters:
+                - 'True'
+                - '0'
+          triggers:
+            -
+              uuid: c2c2099dd7dd41dbbe85c55a8853dcd2
+              expression: 'last(/windows need reboot/system.run[powershell -c "!(Get-ItemProperty -Path ''HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired'' -ErrorAction SilentlyContinue)"])=1'
+              name: '{HOST.NAME} reboot required'
+              priority: INFO
+      tags:
+        -
+          tag: system
+          value: reboot
