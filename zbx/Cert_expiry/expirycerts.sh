@@ -31,6 +31,9 @@ echo "}"
 else     # get expiration date by name
 
 #openssl x509 -enddate -noout -in $dir/$PARAM1
-expiryDays=$(( ($(date -d "$(openssl x509 -enddate -noout -in $dir/$PARAM1 | cut -d= -f2)" '+%s') - $(date '+%s')) / 86400 ))
+
+CERTDIR=$(find $dir -name $PARAM1)
+expiryDays=$(( ($(date -d "$(openssl x509 -enddate -noout -in $CERTDIR | cut -d= -f2)" '+%s') - $(date '+%s')) / 86400 ))
 echo $expiryDays
 fi
+
