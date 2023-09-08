@@ -1,0 +1,65 @@
+---
+# tasks file for update
+- name: Redhat Check dnf proxy
+  lineinfile:
+    state: absent
+    path: "/etc/dnf/dnf.conf"
+    regexp: "^proxy="
+  check_mode: true
+  changed_when: false # This just makes things look prettier in the logs
+  register: check
+
+- name: Redhat Define couchbase.host if undefined
+  lineinfile:
+    state: present
+    path: "/etc/dnf/dnf.conf"
+    line: "proxy={{ zabbix_http_proxy }}"
+  when: check.found == 0
+
+- name: Redhat DNF update the system
+  dnf:
+    name:  "*"
+    state: latest
+  when: ansible_facts  ['distribution_major_version'] >= '8'
+
+- name: Redhat Print errors if dnf failed
+  debug:
+    msg: "dnf command produced errors"
+  when: dnfcommandout is not defined
+
+- name: Redhat check to see if we need a reboot
+  command: needs-restarting -r
+  register: result
+  ignore_errors: yes
+
+- name: Redhat display result
+  debug:
+    var: result.rc
+
+- name: Redhat Reboot the box if kernel updated
+  reboot:
+    msg: "Reboot initiated by Ansible for kernel updates"
+    connect_timeout: 5
+    reboot_timeout: 120
+    pre_reboot_delay: 0
+    post_reboot_delay: 30
+    test_command: uptime
+  when: result.rc == 1
+
+# - name: Redhat Reboot Server if Necessary
+#   command: shutdown -r now "Ansible Updates Triggered"
+#   become: true
+#   async: 30
+#   poll: 0
+#   when: result.rc == 1
+
+# - name: Redhat Pausing to allow server to shutdown and terminate our SSH connection
+#   pause: seconds=15
+#   when: result.rc == 1
+
+# - name: Redhat Wait for reboot to complete and SSH to become available
+#   local_action: wait_for host={{ inventory_hostname }} port=22
+#     state=started delay=15 timeout=30
+#   retries: 3
+#   delay: 10
+#   when: result.rc == 1

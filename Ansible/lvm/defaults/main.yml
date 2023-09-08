@@ -1,0 +1,5 @@
+---
+# defaults file for lvm
+lvm_logical_volume: root
+lvm_volume_group: rl
+lvm_volume_pv: /dev/sda2

@@ -1,0 +1,11 @@
+
+chrony_pool1: srvost-ntp-6901.astra.local prefer iburst
+chrony_pool2: srvost-ntp-6902.astra.local iburst
+chrony_pool3: srvost-ntp-6903.astra.local iburst
+chrony_driftfile: /var/lib/chrony/drif
+chrony_makestep: 1.0 3
+chrony_rtcsync: rtcsync
+chrony_keyfile: /etc/chrony.keys
+ubuntu_chrony_keyfile: /etc/chrony/chrony.keys
+chrony_leapsectz: right/UTC
+chrony_logdir: /var/log/chrony

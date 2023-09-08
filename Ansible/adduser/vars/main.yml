@@ -1,0 +1,4 @@
+---
+# vars file for adduser
+sudoersd: /etc/sudoers.d
+sudo_user: True

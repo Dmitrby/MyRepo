@@ -1,0 +1,60 @@
+---
+# Tasks specific for RedHat systems
+
+- name: "RedHat | Install basic repo file"
+  yum_repository:
+    name: "{{ item.name }}"
+    description: "{{ item.description }}"
+    baseurl: "{{ item.baseurl }}"
+    gpgcheck: "{{ item.gpgcheck }}"
+    gpgkey: "{{ item.gpgkey }}"
+    mode: "{{ item.mode | default('0644') }}"
+    priority: "{{ item.priority | default('98') }}"
+    state: "{{ item.state | default('present') }}"
+    proxy: "{{ zabbix_http_proxy | default(omit) }}"
+  with_items: "{{ zabbix_repo_yum }}"
+  register: yum_repo_installed
+  become: true
+  notify:
+    - "clean repo files from proxy creds"
+
+- name: Check if warn parameter can be used for shell module
+  set_fact:
+    produce_warn: False
+  when: ansible_version.full is version("2.10", "<")
+  tags:
+    - always
+
+- name: "RedHat | Installing zabbix-agent"
+  package:
+    pkg:
+      - "{{ zabbix_agent_package }}-{{ zabbix_agent_version }}.{{ zabbix_agent_version_minor }}"
+    disablerepo: "{{ zabbix_agent_disable_repo | default(omit) }}"
+    state: "{{ zabbix_agent_package_state }}"
+  environment:
+    http_proxy: "{{ zabbix_http_proxy | default(None) | default(omit) }}"
+    https_proxy: "{{ zabbix_https_proxy | default(None) | default(omit) }}"
+  register: zabbix_agent_package_installed
+  until: zabbix_agent_package_installed is succeeded
+  become: true
+
+- name: "create config"
+  ansible.builtin.template:
+    src: zabbix_agent2.conf.j2
+    dest: /etc/zabbix/zabbix_agent2.conf
+    mode: '0644'
+
+- name: "RedHat | Enable and restart the service"
+  service:
+    name: "{{ zabbix_agent_service }}"
+    enabled: true
+    use: service
+    state: restarted
+
+# - name: "enable firewalld zabbix server"
+#   ansible.posix.firewalld:
+#     zone: public
+#     service: "{{ zabbix_agent_firewalls_service }}"
+#     permanent: true
+#     immediate: true
+#     state: enabled

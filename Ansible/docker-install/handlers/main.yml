@@ -1,0 +1,14 @@
+---
+# handlers file for docker-install
+- name: "daemon reload"
+  ansible.builtin.systemd:
+    daemon_reload: true
+  listen: "restart docker"
+
+- name: "restart docker services"
+  service:
+    name: docker
+    state: "{{ docker_restart_handler_state }}"
+    enabled: true
+  become: true
+  listen: "restart docker"

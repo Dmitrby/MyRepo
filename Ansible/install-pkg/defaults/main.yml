@@ -1,0 +1,8 @@
+---
+# defaults file for install-pkg
+packages:
+  - rsyslog
+  - open-vm-tools
+  - htop
+  - atop
+  - mc

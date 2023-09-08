@@ -1,0 +1,115 @@
+---
+# defaults file for zabbix_agent
+zabbix_http_proxy: http://10.144.192.220:8080
+zabbix_https_proxy: http://10.144.192.220:8080
+zabbix_agent_version: 6.4
+zabbix_agent_version_minor: "*"
+zabbix_version_patch: 0
+zabbix_agent_package_remove: false
+zabbix_agent_package: zabbix-agent2
+zabbix_sender_package: zabbix-sender
+zabbix_get_package: zabbix-get
+zabbix_agent_package_state: present
+zabbix_agent_server: zabbix-ost-01.astra.local
+zabbix_agent_serveractive: zabbix-ost-01.astra.local
+zabbix_agent2_server: "{{ zabbix_agent_server }}"
+zabbix_agent2_serveractive: "{{ zabbix_agent_serveractive }}"
+zabbix_selinux: false
+zabbix_agent_apt_priority:
+zabbix_agent_conf_mode: "0644"
+zabbix_agent_dont_detect_ip: false
+zabbix_agent_allow_key: []
+zabbix_agent_deny_key: []
+zabbix_agent2_allow_key: "{{ zabbix_agent_allow_key }}"
+zabbix_agent2_deny_key: "{{ zabbix_agent_deny_key }}"
+
+# Selinux related vars
+selinux_allow_zabbix_run_sudo: false
+
+zabbix_agent_install_agent_only: true
+zabbix_agent_packages:
+  - "{{ zabbix_agent_package }}"
+  - "{{ zabbix_sender_package }}"
+  - "{{ zabbix_get_package }}"
+
+# Zabbix role related vars
+zabbix_apt_force_apt_get: true
+zabbix_apt_install_recommends: false
+
+# Override Ansible specific facts
+zabbix_agent_distribution_major_version: "{{ ansible_distribution_major_version }}"
+zabbix_agent_distribution_release: "{{ ansible_distribution_release }}"
+zabbix_repo_yum_gpgcheck: 0
+zabbix_repo_yum_schema: https
+zabbix_agent_disable_repo:
+  - epel
+zabbix_repo_yum:
+  - name: zabbix
+    description: Zabbix Official Repository - $basearch
+    baseurl: "{{ zabbix_repo_yum_schema }}://repo.zabbix.com/zabbix/{{ zabbix_agent_version }}/rhel/{{ zabbix_agent_distribution_major_version }}/$basearch/"
+    mode: "0644"
+    gpgcheck: "{{ zabbix_repo_yum_gpgcheck }}"
+    gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-ZABBIX
+    state: present
+  - name: zabbix-non-supported
+    description: Zabbix Official Repository non-supported - $basearch
+    baseurl: "{{ zabbix_repo_yum_schema }}://repo.zabbix.com/non-supported/rhel/{{ zabbix_agent_distribution_major_version }}/$basearch/"
+    mode: "0644"
+    gpgcheck: "{{ zabbix_repo_yum_gpgcheck }}"
+    gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-ZABBIX
+    state: present
+  - name: zabbix-agent2-plugins
+    description: Zabbix Official Repository (Agent2 Plugins) - $basearch
+    baseurl: "{{ zabbix_repo_yum_schema }}://repo.zabbix.com/zabbix-agent2-plugins/1/rhel/{{ zabbix_agent_distribution_major_version }}/$basearch/"
+    mode: "0644"
+    gpgcheck: "{{ zabbix_repo_yum_gpgcheck }}"
+    gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-ZABBIX
+    state: present
+
+zabbix_agent_interfaces:
+  - type: 1
+    main: 1
+    useip: "{{ zabbix_useuip }}"
+    ip: "{{ zabbix_agent_ip }}"
+    dns: "{{ ansible_fqdn }}"
+    port: "{{ (zabbix_agent2 == True) | ternary(zabbix_agent2_listenport, zabbix_agent_listenport) }}"
+
+# Zabbix Agent2
+zabbix_agent2_pidfile: /run/zabbix/zabbix_agent2.pid
+zabbix_agent2_logfile: /var/log/zabbix/zabbix_agent2.log
+zabbix_agent2_logtype: file
+zabbix_agent2_statusport: 9999
+zabbix_agent2_include: /etc/zabbix/zabbix_agent2.d
+zabbix_agent2_include_pattern: "*.conf"
+zabbix_agent2_include_plugins: /etc/zabbix/zabbix_agent2.d/plugins.d
+zabbix_agent2_logfilesize: 0
+zabbix_agent2_debuglevel: 3
+zabbix_agent2_sourceip:
+zabbix_agent2_listenport: 10050
+zabbix_agent2_listenip:
+zabbix_agent2_hostname: "{{ inventory_hostname }}"
+zabbix_agent2_hostnameitem: system.hostname
+zabbix_agent2_hostmetadata:
+zabbix_agent2_hostmetadataitem:
+zabbix_agent2_hostinterface:
+zabbix_agent2_hostinterfaceitem:
+zabbix_agent2_enablepersistentbuffer: 0
+zabbix_agent2_persistentbufferperiod: 1h
+zabbix_agent2_persistentbufferfile:
+zabbix_agent2_refreshactivechecks: 120
+zabbix_agent2_buffersend: 5
+zabbix_agent2_buffersize: 100
+zabbix_agent2_zabbix_alias:
+zabbix_agent2_timeout: 3
+zabbix_agent2_include_mode: "0750"
+zabbix_agent2_unsafeuserparameters: 0
+zabbix_agent2_controlsocket: /tmp/agent.sock
+zabbix_agent2_plugins: []
+
+
+zabbix_agent_service: zabbix-agent2.service
+zabbix_agent_firewalls_service: zabbix-agent
+
+
+zabbix_debian_keyring_path: /etc/apt/keyrings/
+zabbix_debian_gpg_key: "{{ zabbix_debian_keyring_path }}/zabbix-official-repo.asc"

@@ -1,0 +1,29 @@
+- name: Check dnf proxy
+  lineinfile:
+    state: absent
+    path: "/etc/dnf/dnf.conf"
+    regexp: "^proxy="
+  check_mode: true
+  changed_when: false # This just makes things look prettier in the logs
+  register: check
+
+- name: Define couchbase.host if undefined
+  lineinfile:
+    state: present
+    path: "/etc/dnf/dnf.conf"
+    line: "proxy={{ zabbix_http_proxy }}"
+  when: check.found == 0
+
+- name: install pkg
+  ansible.builtin.dnf:
+    name: epel-release
+    state: latest
+    update_cache: true
+
+- name: install pkg
+  ansible.builtin.dnf:
+    name: "{{ item }}"
+    state: latest
+    update_cache: true
+  with_items: 
+    - "{{ packages }}"

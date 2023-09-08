@@ -1,0 +1,36 @@
+global_defs {
+    script_user root
+    enable_script_security
+}
+
+vrrp_script openresty_check {
+    script "/usr/bin/nc -z -w 2 127.0.0.1 {{CHECK_PORT}}"
+    interval 5
+    user nobody
+}
+
+vrrp_instance web {
+    state {{VRRP_STATE}}
+    interface {{ KEEPALIVE_INTERFACE }}
+    virtual_router_id 254
+{% if VRRP_STATE == "MASTER" %}
+    priority 100
+{% else %}
+    priority 50
+{% endif %}
+    advert_int 1
+{% if VRRP_STATE != "MASTER" %}
+    preempt_delay 30
+{% endif %}
+    notify /etc/keepalived/keepalived-notify.sh root
+    authentication {
+        auth_type PASS
+        auth_pass {{ KEEPALIVED_PASSWORD }}
+    }
+    virtual_ipaddress {
+        {{ VRRP_IPADDRESS }}
+    }
+    track_script {
+        openresty_check
+    }
+}

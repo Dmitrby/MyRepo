@@ -1,0 +1,5 @@
+---
+# handlers file for drweb-config
+- name: daemon_reload
+  ansible.builtin.systemd:
+    daemon_reload: true

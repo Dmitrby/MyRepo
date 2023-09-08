@@ -1,0 +1,42 @@
+global_defs {
+    enable_script_security
+    script_user root
+}
+
+vrrp_instance web {
+    state BACKUP
+    interface {{ KEEPALIVE_INTERFACE }}
+    virtual_router_id 5
+    priority 100
+    advert_int 1
+    nopreempt
+    notify /etc/keepalived/keepalived-notify.sh root
+    authentication {
+        auth_type PASS
+        auth_pass {{ KEEPALIVED_PASSWORD }}
+    }
+    virtual_ipaddress {
+        {{ VRRP_IPADDRESS }}
+    }
+}
+
+virtual_server {{ VRRP_IPADDRESS }} {{ CHECK_PORT }} {
+    protocol {{ VRRP_PROTOCOL }}
+    delay_loop 10
+    lvs_sched rr
+    lvs_method NAT
+
+    real_server {{ NODE_01 }} {{ CHECK_PORT }} {
+        TCP_CHECK {
+        connect_port {{ CHECK_PORT }}
+        connect_timeout 5
+        }
+    }
+
+    real_server {{ NODE_02 }} {{ CHECK_PORT }} {
+        TCP_CHECK {
+        connect_port {{ CHECK_PORT }}
+        connect_timeout 5
+        }
+    }
+}

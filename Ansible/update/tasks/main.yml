@@ -1,0 +1,11 @@
+---
+# tasks file for update
+- name: "Install the correct repository"
+  include_tasks: RedHat.yml
+  when:
+    - ansible_facts['distribution'] == "Rocky"
+
+- name: "Install the correct repository"
+  include_tasks: Debian.yml
+  when:
+    - ansible_facts['distribution'] == "Ubuntu"

@@ -1,0 +1,39 @@
+---
+# tasks file for keepalived
+- name: "Install the correct repository"
+  include_tasks: RedHat.yml
+  when:
+    - ansible_facts['distribution'] == "Rocky"
+
+- name: "Install the correct repository"
+  include_tasks: Debian.yml
+  when:
+    - ansible_facts['distribution'] == "Ubuntu"
+
+- name: "Install the correct repository"
+  include_tasks: Debian.yml
+  when:
+    - ansible_facts['distribution'] == "Ubuntu"
+
+- name: install default keepalived configuration
+  template:
+    src: keepalived.conf.j2
+    dest: "/etc/keepalived/keepalived.conf"
+  when:
+     - KEEPALIVE_MODE  == "backup"
+
+- name: install default keepalived configuration
+  template:
+    src: keepalived-balance.conf.j2
+    dest: "/etc/keepalived/keepalived.conf"
+  when:
+     - KEEPALIVE_MODE  == "balance"
+
+- name: install default keepalived-notify.sh configuration
+  template:
+    src: keepalived-notify.sh.j2
+    dest: "/etc/keepalived/keepalived-notify.sh"
+    owner: root
+    group: root
+    mode: '0744'
+  notify: restart keepalived    

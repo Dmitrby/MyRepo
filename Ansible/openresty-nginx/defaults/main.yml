@@ -1,0 +1,8 @@
+# tasks file for openresty-nginx
+---
+openresty_keepalive_timeout: 65
+openresty_worker_connections: 1024
+openresty_pidfile: /usr/local/openresty/nginx/logs/nginx.pid
+packages:
+  - openresty
+  - openresty-resty

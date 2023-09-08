@@ -1,0 +1,65 @@
+---
+# tasks file for openresty-nginx
+- name: "Install the correct repository"
+  include_tasks: RedHat.yml
+  when:
+    - ansible_facts['distribution'] == "Rocky"
+
+- name: "Install the correct repository"
+  include_tasks: Debian.yml
+  when:
+    - ansible_facts['distribution'] == "Ubuntu"
+
+# Configuration tasks
+# - name: link config for openresty to nginx
+#   file:
+#     state: link
+#     src: "{{ openresty_conf_path }}"
+#     path: "{{ nginx_conf_path }}"
+
+# - debug: var=ansible_service_mgr
+
+# - name: link openresty init script as nginx for service
+#   file:
+#     state: link
+#     src: /etc/init.d/openresty
+#     path: /etc/init.d/nginx
+
+# - name: create nginx service for systemd
+#   template:
+#     src: etc/systemd/system/nginx.service.j2
+#     dest: /etc/systemd/system/nginx.service
+#     owner: root
+#     group: root
+#     mode: 0644
+#   when: ansible_service_mgr == 'systemd'
+
+# - name: create standard nginx directories
+#   file:
+#     state: directory
+#     path: "{{ nginx_conf_path }}/{{ item }}"
+#   with_items:
+#     - conf.d
+#     - sites-enabled
+#     - sites-available
+
+- name: create certificates directories
+  file:
+    state: directory
+    path: "/usr/local/openresty/nginx/{{ item }}"
+  with_items:
+    - sites
+    - ssl
+
+- name: create logs directories
+  file:
+    state: directory
+    path: "/var/log/{{ item }}"
+  with_items:
+    - openresty
+
+- name: install default nginx configuration
+  template:
+    src: etc/nginx/nginx.conf.j2
+    dest: "{{ openresty_conf_path }}/nginx.conf"
+  notify: restart openresty

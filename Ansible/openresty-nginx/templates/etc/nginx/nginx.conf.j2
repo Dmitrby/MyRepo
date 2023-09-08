@@ -1,0 +1,44 @@
+worker_processes  auto;
+pid logs/nginx.pid;
+
+events {
+    worker_connections  768;
+}
+
+http {
+
+    log_format  main_ssl '$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" "$http_x_forwarded_for" "$ssl_protocol" "$http2" "$upstream_addr" "client_fingerprint" $ssl_client_fingerprint "client_dn" $ssl_client_s_dn $ssl_client_escaped_cert';
+
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+    tcp_nopush      on;
+    tcp_nodelay     on;
+    types_hash_max_size 2048;
+    server_tokens off;
+
+    #keepalive_timeout  65;
+
+    ssl_protocols TLSv1.2 TLSv1.3; # Dropping SSLv3, ref: POODLE
+    ssl_prefer_server_ciphers on;
+
+   # ssl_protocol
+   # ssl_cipher
+   # ssl_client_i_dn
+   # ssl_client_s_dn
+   # ssl_client_fingerprint
+   # ssl_session_reused
+   # ssl_client_verify
+   # ssl_client_v_start
+   # ssl_client_v_remain
+   # ssl_client_v_end
+
+    access_log /var/log/openresty/access.log main_ssl;
+    error_log /var/log/openresty/error.log info;
+
+    #gzip  on;
+    #gzip_disable "msie6";
+
+    include ../sites/*;
+}

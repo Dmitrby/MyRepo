@@ -1,0 +1,46 @@
+---
+# add proxy to dnf
+- name: Check dnf proxy
+  lineinfile:
+    state: absent
+    path: "/etc/dnf/dnf.conf"
+    regexp: "^proxy="
+  check_mode: true
+  changed_when: false # This just makes things look prettier in the logs
+  register: check
+
+- name: Define couchbase.host if undefined
+  lineinfile:
+    state: present
+    path: "/etc/dnf/dnf.conf"
+    line: "proxy={{ zabbix_http_proxy }}"
+  when: check.found == 0
+
+## install
+
+- name: Ensure old versions of Docker are not installed.
+  package:
+    name:
+      - docker
+      - docker-common
+      - docker-engine
+    state: absent
+
+- name: Add Docker GPG key.
+  rpm_key:
+    key: "{{ docker_yum_gpg_key }}"
+    state: present
+  environment:
+    https_proxy: "{{ zabbix_http_proxy }}"
+  when: docker_add_repo | bool
+
+- name: Add Docker repository.
+  get_url:
+    url: "{{ docker_yum_repo_url }}"
+    dest: '/etc/yum.repos.d/docker-{{ docker_edition }}.repo'
+    owner: root
+    group: root
+    mode: 0644
+  environment:
+    https_proxy: "{{ zabbix_http_proxy }}"
+  when: docker_add_repo | bool

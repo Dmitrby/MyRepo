@@ -1,0 +1,13 @@
+---
+# tasks file for lvm
+- name: Resize existing pv
+  community.general.lvg:
+    vg: "{{ lvm_volume_group }}"
+    pvs: "{{lvm_volume_pv}}"
+    pvresize: true 
+  
+- name: Extend the logical volume to consume all remaining space in the volume group
+  community.general.lvol:
+    vg: "{{ lvm_volume_group }}"
+    lv: "{{ lvm_logical_volume }}"
+    size: +100%FREE

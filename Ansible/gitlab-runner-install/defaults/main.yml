@@ -1,0 +1,20 @@
+---
+# defaults file for gitlab-runner-install
+
+
+#gitlab_runner_package_version: 
+# add for update
+
+
+#if version
+gitlab_runner_package_version: '16.2.0-1.x86_64'
+debian_gitlab_runner_package_version: 'latest'
+gitlab_runner_state_version: present
+
+#if latest
+gitlab_runner_package_name: 'gitlab-runner'
+gitlab_runner_state: latest
+
+
+# A list of users who will be added to the docker group.
+docker_users: [gitlab-runner]

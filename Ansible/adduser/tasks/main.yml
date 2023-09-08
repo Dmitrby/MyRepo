@@ -1,0 +1,74 @@
+---
+# tasks file for adduser
+  - name: Add new user "{{ user_name }}"
+    ansible.builtin.user:
+        name: "{{ user_name }}"
+        password: "{{ password | password_hash('sha512') if password is defined else '!' }}"
+        shell: /bin/bash
+        createhome: yes     # Defaults to yes
+        home: "/home/{{ user_name }}"
+        update_password: on_create
+    when: user_name is defined and password is defined
+
+  - name: adding existing user '{{ user_name }}' to group wheel
+    ansible.builtin.user:
+      name: '{{ user_name }}'
+      groups: wheel
+      append: yes
+    when: user_name is defined and ansible_os_family == "RedHat" and sudo_user == True
+
+  - name: adding existing user '{{ user_name }}' to group sudo
+    ansible.builtin.user:
+      name: '{{ user_name }}'
+      groups: sudo
+      append: yes
+    when: user_name is defined and ansible_os_family == "Debian" and sudo_user == True
+
+  - name: Creating a new directory ~/.ssh for {{ user_name }}
+    file:
+      path: "/home/{{ user_name }}/.ssh"
+      state: directory
+      mode: 0700
+      owner: "{{ user_name }}"
+      group: "{{ user_name }}"
+    when: user_name is defined  and deploy_key is defined
+
+  - name: Create file ~/.ssh/authorized_keys for {{ user_name }}
+    ansible.builtin.copy:
+      dest: "/home/{{ user_name }}/.ssh/authorized_keys"
+      mode: 0644
+      owner: "{{ user_name }}"
+      group: "{{ user_name }}"
+      content: |
+        {{ deploy_key }}
+    when: user_name is defined and deploy_key is defined
+
+  - name: Create file "{{ sudoersd }}/{{ user_name }}"
+    ansible.builtin.copy:
+      dest: "{{ sudoersd }}/{{ user_name }}"
+      content: |
+        {{ user_name }} ALL=(ALL) NOPASSWD: ALL
+    when: deploy_key is defined and user_name is defined
+
+  - name: change password "{{ user_name }}"
+    ansible.builtin.user:
+      name: "{{ user_name }}"
+      state: present
+      password: "{{ change_password | password_hash('sha512') }}"
+      update_password: always
+    when: change_password is defined
+
+  - name: disable "{{ disable_user }}"
+    ansible.builtin.user:
+      name: "{{ disable_user }}"
+      state: present
+      password_lock: true
+      shell: "/sbin/nologin"
+    when: disable_user is defined
+
+  - name: Remove the user "{{ remove_user_name }}"
+    ansible.builtin.user:
+      name: "{{ remove_user_name }}"
+      state: absent
+      remove: yes
+    when: remove_user_name is defined

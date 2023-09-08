@@ -1,0 +1,35 @@
+---
+- name: "Install the correct repository"
+  include_tasks: RedHat.yml
+  when:
+    - ansible_facts['distribution'] == "Rocky"
+
+- name: "Install the correct repository"
+  include_tasks: Debian.yml
+  when:
+    - ansible_facts['distribution'] == "Ubuntu"
+
+- name: Get docker group info using getent.
+  getent:
+    database: group
+    key: docker
+    split: ':'
+  ignore_errors: True
+  register: docker_group_exist
+  when: docker_users | length > 0
+
+# - name: test
+#   ansible.builtin.debug:
+#     msg: "{{docker_group_exist}}"
+
+- name: Check if there are any users to add to the docker group.
+  set_fact:
+    at_least_one_user_to_modify: true
+  when:
+    - docker_users | length > 0
+    - docker_group_exist.failed == "true"
+    - item not in ansible_facts.getent_group["docker"][2]
+  with_items: "{{ docker_users }}"
+
+- include_tasks: docker-users.yml
+  when: at_least_one_user_to_modify is defined  and docker_group_exist.failed == "true"

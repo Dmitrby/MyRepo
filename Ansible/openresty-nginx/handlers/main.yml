@@ -1,0 +1,4 @@
+# tasks file for openresty-nginx
+---
+- name: restart openresty
+  service: name=openresty state=restarted enabled=true

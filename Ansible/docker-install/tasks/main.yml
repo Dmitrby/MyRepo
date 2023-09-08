@@ -1,0 +1,65 @@
+---
+# tasks file for zabbix_agent
+- name: "Install the correct repository"
+  include_tasks: RedHat.yml
+  when:
+    - ansible_facts['distribution'] == "Rocky"
+
+- name: "Install the correct repository"
+  include_tasks: Debian.yml
+  when:
+    - ansible_facts['distribution'] == "Ubuntu"
+
+- name: Install Docker packages
+  ansible.builtin.dnf:
+    name: "{{ item }}"
+    state: "{{ docker_packages_state }}"
+    update_cache: true
+  with_items: 
+    - "{{ docker_packages }}"
+  notify: "restart docker services"
+  # ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Create a docker.service.d if it does not exist
+  ansible.builtin.file:
+    path: /etc/systemd/system/docker.service.d
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Copy docker proxy file
+  copy:
+    src: http-proxy.conf
+    dest: /etc/systemd/system/docker.service.d
+    owner: root
+    group: root
+    mode: 0400
+  notify: "restart docker"
+
+- name: Ensure Docker is started and enabled at boot.
+  service:
+    name: docker
+    state: "{{ docker_service_state }}"
+    enabled: "{{ docker_service_enabled }}"
+  ignore_errors: "{{ ansible_check_mode }}"
+  when: docker_service_manage | bool
+
+- name: Get docker group info using getent.
+  getent:
+    database: group
+    key: docker
+    split: ':'
+  when: docker_users | length > 0
+
+- name: Check if there are any users to add to the docker group.
+  set_fact:
+    at_least_one_user_to_modify: true
+  when:
+    - docker_users | length > 0
+    - item not in ansible_facts.getent_group["docker"][2]
+  with_items: "{{ docker_users }}"
+
+- include_tasks: docker-users.yml
+  when: at_least_one_user_to_modify is defined
+

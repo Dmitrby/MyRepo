@@ -1,0 +1,17 @@
+- hosts: "{{ target }}"
+  become: true
+  roles:
+    #- lvm # need configure
+    #- chrony
+    #- install-pkg # only rocky
+    #- update
+    #- zabbix_agent
+    #- gitlab # only rocky
+    #- root-ca-update
+    #- docker-install # only rocky
+    #- openresty-nginx # only rocky
+    #- keepalived # only rocky
+    #- gitlab-runner-install # only rocky
+    #- adduser
+    #- drweb-config
+     - test

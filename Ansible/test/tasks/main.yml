@@ -1,0 +1,11 @@
+---
+# tasks file for test
+  - name: test result
+    ansible.builtin.debug:
+      msg: DEV ENVIRENMENT
+    when: "'DEV' in zabbix_agent2_hostmetadata"
+
+  - name: test result
+    ansible.builtin.debug:
+      msg: PROD ENVIRENMENT
+    when: "'PROD' in zabbix_agent2_hostmetadata"

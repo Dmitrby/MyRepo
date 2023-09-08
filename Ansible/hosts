@@ -1,0 +1,26 @@
+[all:vars]
+ansible_ssh_common_args=' -o StrictHostKeyChecking=no '
+ansible_ssh_user=ansible
+ansible_connection=ssh
+ansible_ssh_private_key_file=~/.ssh/id_rsa_ansible
+zabbix_http_proxy=http://*ip
+zabbix_https_proxy=http://*ip
+
+[Rocky]
+*name ansible_host=*ip 
+
+
+[Rocky:vars]
+zabbix_agent2_hostmetadata="[Rocky;PROD]"
+
+[Rocky_dev]
+*name ansible_host=*ip
+
+[Rocky_dev:vars]
+zabbix_agent2_hostmetadata="[Rocky;DEV]"
+
+[Rocky_postgres]
+
+[Rocky_postgres:vars]
+zabbix_agent2_hostmetadata="[Rocky;PROD;Postgress]"
+

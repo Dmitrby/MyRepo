@@ -1,0 +1,31 @@
+---
+# defaults file for docker-install
+
+docker_version: 20.10.21-3.el8
+docker_edition: 'ce'
+docker_packages:
+  - "docker-{{ docker_edition }}-{{ docker_version }}"
+  - "docker-{{ docker_edition }}-cli-{{ docker_version }}"
+  - "docker-compose-plugin "
+  - "containerd.io"
+docker_packages_state: present
+
+# Service options.
+docker_service_manage: true
+docker_service_state: started
+docker_service_enabled: true
+docker_restart_handler_state: restarted
+
+
+# Enable repo setup
+docker_add_repo: true
+
+# Docker repo URL.
+docker_repo_url: https://download.docker.com/linux
+
+# Used only for RedHat/CentOS/Fedora.
+docker_yum_repo_url: "{{ docker_repo_url }}/{{ (ansible_distribution == 'Fedora') | ternary('fedora','centos') }}/docker-{{ docker_edition }}.repo"
+docker_yum_gpg_key: "{{ docker_repo_url }}/centos/gpg"
+
+# A list of users who will be added to the docker group.
+docker_users: [astra, zabbix]
