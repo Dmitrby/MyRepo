@@ -1,0 +1,5 @@
+---
+# defaults file for root-ca-update
+ca_package_name: ca-certificates
+rocky_ca_path: /etc/pki/ca-trust/source/anchors
+ubuntu_ca_path: /usr/local/share/ca-certificates

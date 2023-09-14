@@ -1,0 +1,11 @@
+---
+# handlers file for root-ca-update
+- name: update trusted ca debian
+  ansible.builtin.shell:
+    cmd: update-ca-certificates
+  # shell: /usr/sbin/update-ca-certificates
+
+- name: update trusted ca redhat
+  ansible.builtin.shell:
+    cmd: update-ca-trust
+  # shell: /bin/update-ca-trust

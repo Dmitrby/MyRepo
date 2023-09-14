@@ -1,0 +1,53 @@
+---
+# tasks file for promtail
+- import_tasks: preflight.yml
+
+- name: Debian install rsyslog
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: latest
+    # update_cache: true
+  with_items: 
+    - rsyslog
+  environment:
+    https_proxy: "{{ zabbix_http_proxy }}"
+  when: ansible_os_family == "Debian"
+
+- name: RedHat install rsyslog
+  ansible.builtin.dnf:
+    name: "{{ item }}"
+    state: latest
+    # update_cache: true
+  with_items: 
+    - rsyslog
+  # environment:
+  #   https_proxy: "{{ zabbix_http_proxy }}"
+  when: ansible_os_family == "RedHat"
+
+- import_tasks: install.yml
+
+- name: Ensure promtail service is started and enabled
+  become: True
+  systemd:
+    daemon_reload: True
+    name: "{{ promtail_systemd_service }}"
+    state: started
+    enabled: True
+
+- name: Write config rsyslog additional config  
+  notify:
+    - Restart rsyslog
+  template:
+    src: 50-promtail.conf.j2
+    dest: "/etc/rsyslog.d/50-promtail.conf"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Ensure rsyslog service is started and enabled
+  become: True
+  systemd:
+    daemon_reload: True
+    name: "{{ rsyslog_systemd_service }}"
+    state: started
+    enabled: True
