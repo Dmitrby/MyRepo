@@ -1,0 +1,30 @@
+---
+# tasks file for logrotate
+
+- name: check docker exist
+  stat:
+    path: "/var/lib/docker"
+  register: register_docker
+
+- name: check openresty exist
+  stat:
+    path: "/var/log/openresty"
+  register: register_openresty
+
+- name: set config for logrotate docker
+  template:
+    src: docker.j2
+    dest: "/etc/logrotate.d/docker"
+    owner: root
+    group: root
+    mode: '0644'
+  when: register_docker.stat.exists
+
+- name: set config for logrotate openresty
+  template:
+    src: openresty.j2
+    dest: "/etc/logrotate.d/openresty"
+    owner: root
+    group: root
+    mode: '0644'
+  when: register_openresty.stat.exists

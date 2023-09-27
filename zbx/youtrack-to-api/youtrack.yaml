@@ -1,0 +1,163 @@
+zabbix_export:
+  version: '6.2'
+  date: '2023-09-15T14:30:49Z'
+  media_types:
+    -
+      name: Youtrack
+      type: WEBHOOK
+      parameters:
+        -
+          name: HTTPProxy
+        -
+          name: Message
+          value: '{ALERT.MESSAGE}'
+        -
+          name: ParseMode
+        -
+          name: Subject
+          value: '{ALERT.SUBJECT}'
+        -
+          name: To
+          value: '{ALERT.SENDTO}'
+        -
+          name: Token
+          value: 'perm:ZHlib2V2.NTItMA==.a137bjoidxdnL69pev2w9mZIHmiWPk'
+        -
+          name: Url
+          value: 'https://youtrack.astra.local/api/issues'
+      attempts: '1'
+      script: |
+        var Youtrack = {
+            token: null,
+            to: null,
+            message: null,
+            proxy: null,
+            parse_mode: null,
+            title: null,
+            url: null,
+        
+            escapeMarkup: function (str, mode) {
+                switch (mode) {
+                    case 'markdown':
+                        return str.replace(/([_*\[`])/g, '\\$&');
+        
+                    case 'markdownv2':
+                        return str.replace(/([_*\[\]()~`>#+\-=|{}.!])/g, '\\$&');
+        
+                    default:
+                        return str;
+                }
+            },
+        
+            sendMessage: function () {
+                var params = {
+                    project: {"id":Youtrack.to},
+                    summary: Youtrack.title,
+                    description: Youtrack.message
+                },
+                data,
+                response,
+                request = new HttpRequest(),
+                url = Youtrack.url;
+        
+                if (Youtrack.parse_mode !== null) {
+                    params['parse_mode'] = Youtrack.parse_mode;
+                }
+        
+                if (Youtrack.proxy) {
+                    request.setProxy(Youtrack.proxy);
+                }
+        
+                request.addHeader('Accept: application/json');
+                request.addHeader('Authorization: Bearer ' + Youtrack.token);
+                request.addHeader('Content-Type: application/json');
+        
+                data = JSON.stringify(params);
+        
+                // Remove replace() function if you want to see the exposed token in the log file.
+                Zabbix.log(4, '[Youtrack Webhook] URL: ' + url);
+                Zabbix.log(4, '[Youtrack Webhook] params: ' + data);
+                response = request.post(url, data);
+                Zabbix.log(4, '[Youtrack Webhook] HTTP code: ' + request.getStatus());
+        
+                try {
+                    response = JSON.parse(response);
+                }
+                catch (error) {
+                    response = null;
+                }
+        
+                if (request.getStatus() !== 200) {
+                    if (typeof response.description === 'string') {
+                        throw response.description;
+                    }
+                    else {
+                        throw 'Unknown error. Check debug log for more information.';
+                    }
+                }
+            }
+        };
+        
+        try {
+            var params = JSON.parse(value);
+        
+            if (typeof params.Token === 'undefined') {
+                throw 'Incorrect value is given for parameter "Token": parameter is missing';
+            }
+        
+            Youtrack.token = params.Token;
+        
+            if (params.HTTPProxy) {
+                Youtrack.proxy = params.HTTPProxy;
+            } 
+        
+            params.ParseMode = params.ParseMode.toLowerCase();
+            
+            if (['markdown', 'html', 'markdownv2'].indexOf(params.ParseMode) !== -1) {
+                Youtrack.parse_mode = params.ParseMode;
+            }
+        
+            Youtrack.to = params.To;
+            Youtrack.url = params.Url;
+            Youtrack.title = params.Subject;
+            Youtrack.message = params.Subject + '\n' + params.Message;
+        
+            if (['markdown', 'markdownv2'].indexOf(params.ParseMode) !== -1) {
+                Youtrack.message = Youtrack.escapeMarkup(Youtrack.message, params.ParseMode);
+            }
+        
+            Youtrack.sendMessage();
+            return 'OK';
+        }
+        catch (error) {
+            Zabbix.log(4, '[Youtrack Webhook] notification failed: ' + error);
+            throw 'Sending failed: ' + error + '.';
+        }
+      timeout: 10s
+      description: |
+        https://git.zabbix.com/projects/ZBX/repos/zabbix/browse/templates/media/Youtrack
+        
+        1. Register bot: send "/newbot" to @BotFather and follow instructions
+        2. Copy and paste the obtained token into the "Token" field above
+        3. If you want to send personal notifications, you need to get chat id of the user you want to send messages to:
+            3.1. Send "/getid" to "@myidbot" in Youtrack messenger
+            3.2. Copy returned chat id and save it in the "Youtrack Webhook" media for the user
+            3.3. Ask the user to send "/start" to your bot (Youtrack bot won't send anything to the user without it)
+        4. If you want to send group notifications, you need to get group id of the group you want to send messages to:
+            4.1. Add "@myidbot" to your group
+            4.2. Send "/getgroupid@myidbot" in your group
+            4.3. Copy returned group id save it in the "Youtrack Webhook" media for the user you created for  group notifications
+            4.4. Send "/start@your_bot_name_here" in your group (Youtrack bot won't send anything to the group without it)
+      message_templates:
+        -
+          event_source: TRIGGERS
+          operation_mode: PROBLEM
+          subject: 'Problem:  {HOST.NAME} - {EVENT.NAME}'
+          message: |
+            Problem started at {EVENT.TIME} on {EVENT.DATE}
+            Problem name: {EVENT.NAME}
+            Host: {HOST.NAME}
+            Severity: {EVENT.SEVERITY}
+            Operational data: {EVENT.OPDATA}
+            Original problem ID: {EVENT.ID}
+            {TRIGGER.URL}

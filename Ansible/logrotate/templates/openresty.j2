@@ -1,0 +1,14 @@
+/var/log/openresty/*.log {
+create 0664 root root
+daily
+missingok
+compress
+delaycompress
+notifempty
+size=100M
+rotate 30
+sharedscripts
+postrotate
+/bin/kill -USR1 cat /usr/local/openresty/nginx/logs/nginx.pid 2>/dev/null 2>/dev/null || true
+endscript
+}

@@ -1,4 +1,4 @@
 module(load="omprog")
 module(load="mmutf8fix")
 action(type="mmutf8fix" replacementChar="?")
-action(type="omfwd" protocol="tcp" target="0.0.0.0" port="20514" Template="RSYSLOG_SyslogProtocol23Format" TCP_Framing="octet-counted" KeepAlive="on")
+action(type="omfwd" protocol="tcp" target="0.0.0.0" port="20514" queue.type="linkedlist" queue.saveOnShutdown="on" queue.filename="rsyslog_fwd"  action.resumeRetryCount="-1" Template="RSYSLOG_SyslogProtocol23Format" TCP_Framing="octet-counted" KeepAlive="on")
