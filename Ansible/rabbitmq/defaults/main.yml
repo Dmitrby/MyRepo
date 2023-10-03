@@ -1,0 +1,92 @@
+---
+rabbitmq_skip_package_repo_install: false
+
+rabbitmq_install: false
+rabbitmq_version: 3.12.6
+rabbitmq_suffix: 1
+rabbitmq_package: "{{ rabbitmq_version }}-{{ rabbitmq_suffix }}"
+
+rabbitmq_hosts: |
+   10.144.192.188 rabbitmq-master-test
+   10.144.192.189 rabbitmq-node-test
+update_hosts: true
+
+#repo urls
+erlang_repo_url: "https://packagecloud.io/install/repositories/rabbitmq/erlang/script.rpm.sh"
+rabbitmq_repo_url: "https://packagecloud.io/install/repositories/rabbitmq/rabbitmq-server/script.rpm.sh"
+
+# cluster
+rabbitmq_create_cluster: yes
+rabbitmq_erlang_cookie: "GWUCKEYFFHEKCHECYQWF"
+
+# https://www.rabbitmq.com/configure.html#define-environment-variables
+# When set to true this will cause RabbitMQ to use fully qualified names to identify nodes.
+# This may prove useful on EC2.
+# Note that it is not possible to switch between using short and long names without resetting the node.
+rabbitmq_use_longname: false
+
+# The main setting that needs adjustment is the max number of open files, also known as ulimit -n.
+# The default value on many operating systems is too low for a messaging broker (eg. 1024 on several Linux distributions).
+# We recommend allowing for at least 65536 file descriptors for user rabbitmq in production environments.
+# 4096 should be sufficient for most development workloads
+rabbitmq_ulimit_open_files: 4096
+
+# default ports
+rabbitmq_tls_port: 5671
+rabbitmq_amqp_port: 5672
+rabbitmq_epmd_port: 4369
+rabbitmq_node_port: 25672
+
+# plugins for HTTP API monitor
+rabbitmq_plugins_prefix_path: /usr/lib/rabbitmq
+rabbitmq_plugins:
+  - name: rabbitmq_management
+    state: enabled
+  - name: rabbitmq_shovel
+    state: enabled
+  - name: rabbitmq_shovel_management
+    state: enabled
+rabbitmq_enabled_plugins_file_path: /etc/rabbitmq/enabled_plugins
+rabbitmq_owner: rabbitmq
+rabbitmq_group: rabbitmq
+
+#logrotate
+rabbitmq_logrotate_period: daily
+rabbitmq_logrotate_amount: 30
+
+# TLS/SSL support
+enable_tls: false
+# if true, only tls is supported which means amqp default port 5672 is not open anymore
+tls_only: false
+
+tls_verify: "verify_none"
+tls_fail_if_no_peer_cert: false
+
+cacertfile: ""
+cacertfile_dest: "/etc/rabbitmq/cacert.pem"
+
+certfile: ""
+certfile_dest: "/etc/rabbitmq/cert.pem"
+
+keyfile: ""
+keyfile_dest: "/etc/rabbitmq/key.pem"
+
+# By default, queues within a RabbitMQ cluster are located on a single node (the node on which they were first declared).
+# Queues can optionally be made mirrored across all nodes, or exactly N number of nodes
+# By enabling this variable to true, there will be 1 queue master and 1 queue mirror.
+# If the node running the queue master becomes unavailable, the queue mirror will be automatically promoted to master.
+backup_queues_in_two_nodes: true
+
+# RabbitMQ Users
+rabbitmq_manage_users: true
+rabbitmq_users: {}
+rabbitmq_users_default:
+  admin:
+    password: rabbitmq
+    tags: administrator
+  zbx_monitor:
+    password: o28u1oiuhf
+    tags: monitoring
+    configure_priv: ^$
+    write_priv: ^$
+    state: present

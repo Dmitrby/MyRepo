@@ -1,0 +1,31 @@
+- name: Check dnf proxy
+  lineinfile:
+    state: absent
+    path: "/etc/dnf/dnf.conf"
+    regexp: "^proxy="
+  check_mode: true
+  changed_when: false # This just makes things look prettier in the logs
+  register: check
+
+- name: Define couchbase.host if undefined
+  lineinfile:
+    state: present
+    path: "/etc/dnf/dnf.conf"
+    line: "proxy={{ zabbix_http_proxy }}"
+  when: check.found == 0
+
+- name: REdhat install rabbitmq-server
+  ansible.builtin.dnf:
+    name: "rabbitmq-server-{{ rabbitmq_package }}.el8.noarch"
+    state: present
+    update_cache: true
+  notify:
+    start rabbitmq-server
+
+- name: customize logrotate rules
+  template:
+    src: etc/logrotate.d/rabbitmq-server.j2
+    dest: /etc/logrotate.d/rabbitmq-server
+    owner: root
+    group: root
+    mode: 0644

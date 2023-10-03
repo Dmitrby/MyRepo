@@ -1,0 +1,41 @@
+---
+# Setup installation repositories
+- name: (RedHat) add rabbitmq repository installation script
+  get_url:
+    url: "{{ rabbitmq_repo_url }}"
+    dest: /tmp/rabbitmq.script.rpm.sh
+    mode: 0744
+  environment:
+    https_proxy: "{{ zabbix_http_proxy }}"
+
+- name: (RedHat) add rabbitmq erlang repository installation script
+  get_url:
+    url: "{{ erlang_repo_url }}"
+    dest: /tmp/erlang.script.rpm.sh
+    mode: 0744
+  environment:
+    https_proxy: "{{ zabbix_http_proxy }}"
+
+- name: (RedHat) Install rabbitmq repository
+  command: >
+    {% if ansible_distribution == "Rocky" %}
+    env os=el dist={{ ansible_distribution_major_version }}
+    {% endif %}
+    bash /tmp/rabbitmq.script.rpm.sh
+  args:
+    creates: "/etc/yum.repos.d/rabbitmq-server.repo"
+  become: true
+  environment:
+    https_proxy: "{{ zabbix_http_proxy }}"
+
+- name: (RedHat) Install rabbitmq erlang repository
+  command: >
+    {% if ansible_distribution == "Rocky" %}
+    env os=el dist={{ ansible_distribution_major_version }}
+    {% endif %}
+    bash /tmp/erlang.script.rpm.sh
+  args:
+    creates: "/etc/yum.repos.d/erlang.repo"
+  become: true
+  environment:
+    https_proxy: "{{ zabbix_http_proxy }}"
